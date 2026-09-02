@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Projeto de Expansão — Igreja United Bela Vista</title>
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <header class="hero">
+    <p class="eyebrow">igrejaunited | bela vista</p>
+    <h1>Projeto de Expansão</h1>
+    <p class="lead">Cada oferta é uma semente para o que Deus está construindo nesta casa. Escolha um item e ofereça o valor que quiser via Pix.</p>
+  </header>
+
+  <main>
+    <section id="status-banner" class="status-banner" hidden></section>
+
+    <section class="pix-info">
+      Chave Pix oficial: <strong>belavista@igrejaunited.com</strong> — Igreja United Bela Vista. Todas as ofertas feitas por aqui vão direto para essa chave, através do checkout seguro do Mercado Pago.
+    </section>
+
+    <section id="items" class="items-grid">
+      <p class="loading">Carregando itens…</p>
+    </section>
+  </main>
+
+  <footer>
+    <p>Igreja United Bela Vista</p>
+  </footer>
+
+  <div id="modal-backdrop" class="modal-backdrop" hidden>
+    <div class="modal">
+      <button class="modal-close" id="modal-close" aria-label="Fechar">×</button>
+      <h2 id="modal-item-name">Ofertar</h2>
+      <p id="modal-item-remaining" class="modal-remaining"></p>
+
+      <label for="modal-amount">Valor da oferta (R$)</label>
+      <div class="chip-row" id="chip-row"></div>
+      <input type="number" id="modal-amount" min="5" step="0.01" placeholder="0,00" />
+
+      <label for="modal-name">Seu nome (opcional)</label>
+      <input type="text" id="modal-name" placeholder="Como quer ser identificado" />
+
+      <button id="modal-submit" class="btn-primary">Ir para pagamento via Pix</button>
+      <p id="modal-error" class="modal-error" hidden></p>
+      <p class="modal-note">Você será direcionado ao checkout seguro do Mercado Pago para pagar via Pix.</p>
+    </div>
+  </div>
+
+  <script src="/js/main.js"></script>
+</body>
+</html>

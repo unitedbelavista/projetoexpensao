@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Painel Admin — Projeto de Expansão</title>
+<link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="/css/admin.css" />
+</head>
+<body class="admin-body">
+
+  <div id="login-screen" class="login-screen">
+    <div class="login-card">
+      <h1>Painel Administrativo</h1>
+      <p>Projeto de Expansão — Igreja United Bela Vista</p>
+      <input type="password" id="login-password" placeholder="Senha de administrador" />
+      <button id="login-submit" class="btn-primary">Entrar</button>
+      <p id="login-error" class="modal-error" hidden></p>
+    </div>
+  </div>
+
+  <div id="dashboard" class="dashboard" hidden>
+    <header class="admin-header">
+      <h1>Painel — Projeto de Expansão</h1>
+      <button id="logout-btn" class="btn-secondary">Sair</button>
+    </header>
+
+    <section class="totals-row" id="totals-row"></section>
+
+    <section class="admin-section">
+      <div class="admin-section-header">
+        <h2>Itens</h2>
+        <button id="new-item-btn" class="btn-primary">+ Novo item</button>
+      </div>
+      <div id="items-table"></div>
+    </section>
+
+    <section class="admin-section">
+      <h2>Últimas ofertas</h2>
+      <div id="contributions-table"></div>
+    </section>
+  </div>
+
+  <div id="item-modal-backdrop" class="modal-backdrop" hidden>
+    <div class="modal">
+      <button class="modal-close" id="item-modal-close" aria-label="Fechar">×</button>
+      <h2 id="item-modal-title">Novo item</h2>
+      <input type="hidden" id="item-id" />
+      <label>Nome</label>
+      <input type="text" id="item-name" />
+      <label>Descrição</label>
+      <input type="text" id="item-description" />
+      <label>URL da imagem (opcional)</label>
+      <input type="text" id="item-image" />
+      <label>Valor alvo (R$)</label>
+      <input type="number" id="item-target" step="0.01" min="0" />
+      <label><input type="checkbox" id="item-active" checked /> Ativo (aparece na página pública)</label>
+      <button id="item-save-btn" class="btn-primary">Salvar</button>
+      <button id="item-delete-btn" class="btn-danger" hidden>Excluir item</button>
+      <p id="item-modal-error" class="modal-error" hidden></p>
+    </div>
+  </div>
+
+  <script src="/js/admin.js"></script>
+</body>
+</html>
