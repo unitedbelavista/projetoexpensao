@@ -5,11 +5,12 @@ gambiarra. Duas partes:
 
 1. **Página pública** (`/`): lista os itens que a igreja precisa comprar,
    mostra quanto já foi arrecadado x meta de cada um, e deixa qualquer
-   pessoa ofertar o valor que quiser **via Pix**, pelo checkout do Mercado
-   Pago.
+   pessoa registrar uma oferta do valor que quiser e pagar **via Pix**,
+   direto pelo app do banco.
 2. **Painel administrativo** (`/admin`): login com senha única
    compartilhada; mostra o total arrecadado/pendente/faltante por item e no
-   geral, e permite cadastrar, editar, ocultar ou excluir itens.
+   geral, permite cadastrar/editar/ocultar/excluir itens, e confirmar
+   manualmente as ofertas depois que o Pix cair na conta da igreja.
 
 Chave Pix oficial da igreja (já configurada no app): `belavista@igrejaunited.com`.
 
@@ -22,22 +23,26 @@ Chave Pix oficial da igreja (já configurada no app): `belavista@igrejaunited.co
 - **Backend**: Netlify Functions (Node.js, serverless), na pasta
   `netlify/functions/`.
 - **Banco de dados**: Supabase (Postgres gratuito na nuvem).
-- **Pagamentos**: Mercado Pago Checkout Pro, configurado para aceitar
-  **somente Pix** (cartão fica desativado na tela de checkout, a pedido da
-  igreja). O app nunca manuseia dado de cartão nem precisaria, já que só
-  Pix está habilitado. Quando o pagamento é confirmado, o Mercado Pago
-  avisa o app via webhook e o valor entra automaticamente no progresso do
-  item — sem precisar mandar comprovante manualmente.
+- **Pagamentos**: **Pix manual, sem gateway de pagamento**. Quando alguém
+  clica em "Ofertar", o app só registra a intenção de oferta como
+  "pendente" no banco e mostra a chave Pix da igreja para a pessoa copiar e
+  pagar direto pelo app do banco dela. Como não existe integração com
+  banco/gateway nenhum, ninguém confirma o pagamento automaticamente — é o
+  **administrador que confere o Pix na conta da igreja e confirma a oferta
+  no painel** (botão "Confirmar recebimento"). Só depois dessa confirmação
+  o valor entra no total arrecadado do item.
 
-> **Sobre o gateway de pagamento**: este projeto usa o Mercado Pago (mais
-> usado no Brasil, fácil de configurar), restrito a Pix. Se a liderança da
-> igreja decidir usar o Asaas ou outro gateway depois, é uma troca
-> isolada: só os arquivos `netlify/functions/_shared/mercadopago.js`,
-> `create-preference.js` e `mp-webhook.js` precisam mudar — o resto do app
-> (banco, painel admin, página pública) continua igual. A restrição a
-> "somente Pix" está no bloco `payment_methods.excluded_payment_types` de
-> `create-preference.js` — se um dia quiserem reativar cartão, é só
-> remover esse bloco.
+> **Por que não usar um gateway de pagamento (Mercado Pago, etc.)?** A
+> igreja decidiu não abrir conta em gateway nenhum por enquanto, então o
+> app foi simplificado para não depender disso: sem gateway, sem taxas por
+> transação, sem token de API para gerenciar. A única "manutenção" extra é
+> o administrador clicar em "Confirmar recebimento" depois de ver o Pix
+> cair na conta do banco — leva poucos segundos por oferta. Se um dia a
+> igreja quiser voltar a ter confirmação automática, dá para reintroduzir
+> um gateway (Mercado Pago, Asaas, etc.) trocando só o endpoint
+> `netlify/functions/register-offer.js` por uma versão que crie a cobrança
+> no gateway escolhido — o resto do app (banco, painel admin, página
+> pública) continua igual.
 
 ## Passo a passo para colocar no ar
 
@@ -54,17 +59,7 @@ Chave Pix oficial da igreja (já configurada no app): `belavista@igrejaunited.co
    - `service_role` key (não é a `anon` key!) → variável
      `SUPABASE_SERVICE_ROLE_KEY`
 
-### 2. Criar a conta no Mercado Pago
-
-1. Crie/acesse uma conta Mercado Pago em nome da igreja (para o dinheiro
-   cair na conta certa).
-2. Acesse https://www.mercadopago.com.br/developers/panel/app e crie uma
-   aplicação.
-3. Copie o **Access Token de produção** → variável `MP_ACCESS_TOKEN`
-   (use o de teste primeiro, se quiser simular pagamentos antes de ir ao
-   ar de verdade).
-
-### 3. Configurar o Painel Admin
+### 2. Configurar o Painel Admin
 
 Defina duas variáveis:
 
@@ -74,47 +69,57 @@ Defina duas variáveis:
   https://generate-secret.vercel.app/32) — é só para assinar a sessão de
   login, ninguém precisa saber ou guardar isso além do servidor.
 
-### 4. Publicar no Netlify
+### 3. Publicar no Netlify
 
 1. Suba esta pasta para um repositório no GitHub (ou arraste a pasta
    direto no painel do Netlify, em "Deploy manually").
 2. No Netlify, **New site from Git**, aponte para o repositório. O
    `netlify.toml` já diz onde estão o site (`public/`) e as functions
    (`netlify/functions/`) — não precisa de comando de build.
-3. Em **Site settings > Environment variables**, cadastre todas as
-   variáveis do `.env.example`:
+3. Em **Site settings > Environment variables**, cadastre as 4 variáveis
+   do `.env.example`:
    - `SUPABASE_URL`
    - `SUPABASE_SERVICE_ROLE_KEY`
-   - `MP_ACCESS_TOKEN`
    - `ADMIN_PASSWORD`
    - `ADMIN_JWT_SECRET`
-   - `SITE_URL` → depois do primeiro deploy, preencha com a URL que o
-     Netlify gerou (ex: `https://expansao-united.netlify.app`), sem barra
-     no final. Se for usar domínio próprio, atualize aqui quando o domínio
-     estiver ativo.
 4. Faça o deploy (o Netlify já dispara um automaticamente depois de salvar
    as variáveis, ou clique em "Trigger deploy").
 
-### 5. Domínio próprio da igreja
+### 4. Domínio próprio da igreja
 
 Quando quiser usar o domínio da igreja, vá em **Domain settings** no
-Netlify e siga o passo a passo de adicionar um domínio customizado
-(aponta o DNS do domínio para o Netlify). Depois de ativo, atualize a
-variável `SITE_URL` para o novo domínio.
+Netlify e siga o passo a passo de adicionar um domínio customizado (aponta
+o DNS do domínio para o Netlify).
 
-### 6. Testar antes de divulgar
+### 5. Testar antes de divulgar
 
-1. Acesse a página pública e clique em "Ofertar" em um item — você deve
-   cair no checkout do Mercado Pago já mostrando só a opção de Pix.
-2. Se estiver usando o Access Token de **teste**, use as
-   [contas de teste / Pix de teste do Mercado Pago](https://www.mercadopago.com.br/developers/pt/docs/checkout-pro/additional-content/your-integrations/test/accounts)
-   para simular uma oferta aprovada e confirmar que o valor aparece como
-   arrecadado.
-3. Acesse `/admin`, entre com a senha, confirme que o item mostra o valor
-   certo e que dá para cadastrar/editar/ocultar/excluir itens.
-4. Quando tudo estiver certo, troque o `MP_ACCESS_TOKEN` para o de
-   **produção** e recomece a arrecadação zerada (ou apague as ofertas de
-   teste direto no Supabase, tabela `contributions`).
+1. Acesse a página pública e clique em "Ofertar" em um item, preencha um
+   valor e registre a oferta — você deve ver a tela de sucesso com a chave
+   Pix e o botão de copiar.
+2. Acesse `/admin`, entre com a senha, confirme que a oferta aparece como
+   "pending" na tabela de ofertas.
+3. Clique em "Confirmar recebimento" nessa oferta de teste e veja o valor
+   entrar no total arrecadado do item. Depois pode excluir essa oferta de
+   teste direto no Supabase (tabela `contributions`) ou deixar como
+   histórico.
+4. Confirme que dá para cadastrar/editar/ocultar/excluir itens pelo
+   painel.
+
+## Rotina do administrador (confirmar ofertas)
+
+Sempre que alguém registrar uma oferta no site, ela aparece em `/admin`
+com status **pending**. O fluxo esperado é:
+
+1. Verificar os Pix recebidos na conta do banco da igreja.
+2. Para cada Pix que bater com uma oferta pendente (mesmo valor,
+   aproximadamente na mesma data), clicar em **"Confirmar recebimento"**
+   ao lado dela na tabela "Últimas ofertas".
+3. Se uma oferta pendente nunca for paga (a pessoa desistiu, por exemplo),
+   pode clicar em **"Rejeitar"** para tirá-la da lista de pendências —
+   isso não conta nem como arrecadado nem como pendente.
+
+Só ofertas com status **approved** entram no valor arrecadado mostrado na
+página pública e nos totais do painel.
 
 ## Estrutura de pastas
 
@@ -126,12 +131,12 @@ public/                  → site estático (página pública + admin)
   js/
 netlify/functions/       → backend (serverless)
   items.js               → GET público: lista itens + valor arrecadado
-  create-preference.js   → POST público: cria a oferta + checkout Mercado Pago
-  mp-webhook.js          → recebe a confirmação de pagamento do Mercado Pago
+  register-offer.js      → POST público: registra a oferta como "pending"
   admin-login.js         → POST: login do painel (senha única)
   admin-logout.js        → POST: logout
   admin-session.js       → GET: verifica se a sessão admin está válida
   admin-items.js         → GET/POST/PUT/DELETE protegidos: gerenciar itens
+  admin-contributions.js → PUT/DELETE protegidos: confirmar/rejeitar/excluir ofertas
   admin-summary.js       → GET protegido: totais e lista de ofertas
   _shared/                → código compartilhado entre as functions acima
 sql/
@@ -141,11 +146,14 @@ sql/
 
 ## Segurança
 
-- A `SUPABASE_SERVICE_ROLE_KEY` e o `MP_ACCESS_TOKEN` só existem dentro das
-  Netlify Functions (rodam no servidor) — nunca aparecem no navegador do
-  visitante.
-- O app nunca recebe, processa ou armazena número de cartão — e como o
-  checkout está restrito a Pix, nem chega a mostrar essa opção para quem
-  vai ofertar.
+- A `SUPABASE_SERVICE_ROLE_KEY` só existe dentro das Netlify Functions
+  (roda no servidor) — nunca aparece no navegador do visitante.
+- O app nunca recebe, processa ou armazena número de cartão, senha
+  bancária ou qualquer dado sensível de pagamento — a pessoa que oferta
+  paga direto no app do banco dela, usando só a chave Pix pública da
+  igreja.
 - O login do admin usa um cookie de sessão assinado (`HttpOnly`, `Secure`),
   válido por 12 horas.
+- Como a confirmação é manual, vale reforçar com quem for administrar: só
+  confirmar uma oferta depois de ver o Pix correspondente realmente
+  chegar na conta do banco da igreja.

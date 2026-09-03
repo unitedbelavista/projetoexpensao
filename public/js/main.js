@@ -1,4 +1,5 @@
 const state = { items: [], selectedItem: null };
+const PIX_KEY = 'belavista@igrejaunited.com';
 
 function currency(value) {
   return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -51,12 +52,19 @@ function openModal(itemId) {
   if (!item) return;
   state.selectedItem = item;
 
+  document.getElementById('modal-form-view').hidden = false;
+  document.getElementById('modal-success-view').hidden = true;
+
   document.getElementById('modal-item-name').textContent = `Ofertar — ${item.name}`;
   const remaining = Math.max(0, item.target_amount - item.raised_amount);
   document.getElementById('modal-item-remaining').textContent = `Faltam ${currency(remaining)} para completar a meta.`;
   document.getElementById('modal-amount').value = '';
   document.getElementById('modal-name').value = '';
   document.getElementById('modal-error').hidden = true;
+
+  const submitBtn = document.getElementById('modal-submit');
+  submitBtn.disabled = false;
+  submitBtn.textContent = 'Registrar oferta e pagar via Pix';
 
   const chipValues = [25, 50, 100, 250];
   const chipRow = document.getElementById('chip-row');
@@ -77,6 +85,24 @@ function closeModal() {
   state.selectedItem = null;
 }
 
+function showSuccessView() {
+  document.getElementById('modal-form-view').hidden = true;
+  document.getElementById('modal-success-view').hidden = false;
+  document.getElementById('copy-feedback').hidden = true;
+}
+
+async function copyPixKey() {
+  const feedback = document.getElementById('copy-feedback');
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(PIX_KEY);
+    }
+  } catch (err) {
+    // clipboard indisponível neste navegador; a pessoa pode copiar a chave manualmente
+  }
+  feedback.hidden = false;
+}
+
 async function submitOffer() {
   const amountInput = document.getElementById('modal-amount');
   const nameInput = document.getElementById('modal-name');
@@ -92,10 +118,10 @@ async function submitOffer() {
 
   errorEl.hidden = true;
   submitBtn.disabled = true;
-  submitBtn.textContent = 'Preparando pagamento via Pix…';
+  submitBtn.textContent = 'Registrando…';
 
   try {
-    const res = await fetch('/.netlify/functions/create-preference', {
+    const res = await fetch('/.netlify/functions/register-offer', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -105,29 +131,13 @@ async function submitOffer() {
       }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Erro ao criar pagamento.');
-    window.location.href = data.checkout_url;
+    if (!res.ok) throw new Error(data.error || 'Erro ao registrar oferta.');
+    showSuccessView();
   } catch (err) {
-    errorEl.textContent = err.message || 'Não foi possível iniciar o pagamento. Tente novamente.';
+    errorEl.textContent = err.message || 'Não foi possível registrar a oferta. Tente novamente.';
     errorEl.hidden = false;
     submitBtn.disabled = false;
-    submitBtn.textContent = 'Ir para pagamento via Pix';
-  }
-}
-
-function showStatusBanner() {
-  const params = new URLSearchParams(window.location.search);
-  const status = params.get('status');
-  if (!status) return;
-  const banner = document.getElementById('status-banner');
-  const messages = {
-    sucesso: 'Oferta recebida! Muito obrigado por fazer parte deste projeto. 🙏',
-    pendente: 'Sua oferta está sendo processada. Assim que for confirmada, o progresso será atualizado.',
-    falha: 'Não foi possível concluir o pagamento. Você pode tentar novamente quando quiser.',
-  };
-  if (messages[status]) {
-    banner.textContent = messages[status];
-    banner.hidden = false;
+    submitBtn.textContent = 'Registrar oferta e pagar via Pix';
   }
 }
 
@@ -136,6 +146,10 @@ document.getElementById('modal-backdrop').addEventListener('click', (e) => {
   if (e.target.id === 'modal-backdrop') closeModal();
 });
 document.getElementById('modal-submit').addEventListener('click', submitOffer);
+document.getElementById('copy-pix-btn').addEventListener('click', copyPixKey);
+document.getElementById('modal-done-btn').addEventListener('click', () => {
+  closeModal();
+  loadItems();
+});
 
-showStatusBanner();
 loadItems();

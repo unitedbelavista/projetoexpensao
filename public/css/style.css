@@ -252,4 +252,42 @@ footer {
   margin-top: 12px;
 }
 
+.pix-key-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--brand-cream);
+  border: 1px solid var(--brand-dusty);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 16px 0 6px;
+}
+
+.pix-key-box span {
+  font-weight: 600;
+  color: var(--brand-terracotta-dark);
+  word-break: break-all;
+}
+
+.btn-secondary-small {
+  background: var(--brand-white);
+  border: 1px solid var(--brand-terracotta);
+  color: var(--brand-terracotta-dark);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-secondary-small:hover { background: var(--brand-terracotta); color: var(--brand-offwhite); }
+
+.copy-feedback {
+  color: var(--success);
+  font-size: 13px;
+  margin: 6px 0 0;
+}
+
 [hidden] { display: none !important; }

@@ -119,7 +119,7 @@ function renderContributionsTable() {
   container.innerHTML = `
     <table class="data-table">
       <thead>
-        <tr><th>Data</th><th>Item</th><th>Ofertante</th><th>Valor</th><th>Status</th><th>Método</th></tr>
+        <tr><th>Data</th><th>Item</th><th>Ofertante</th><th>Valor</th><th>Status</th><th></th></tr>
       </thead>
       <tbody>
         ${state.contributions.map((c) => `
@@ -129,12 +129,40 @@ function renderContributionsTable() {
             <td>${c.payer_name || '—'}</td>
             <td>${currency(c.amount)}</td>
             <td><span class="status-pill status-${c.status}">${c.status}</span></td>
-            <td>${c.payment_method || '—'}</td>
+            <td>
+              ${c.status === 'pending' ? `
+                <button class="link-btn" data-approve="${c.id}">Confirmar recebimento</button>
+                <button class="link-btn link-btn-danger" data-reject="${c.id}">Rejeitar</button>
+              ` : '—'}
+            </td>
           </tr>
         `).join('')}
       </tbody>
     </table>
   `;
+  container.querySelectorAll('button[data-approve]').forEach((btn) => {
+    btn.addEventListener('click', () => updateContributionStatus(btn.dataset.approve, 'approved'));
+  });
+  container.querySelectorAll('button[data-reject]').forEach((btn) => {
+    btn.addEventListener('click', () => updateContributionStatus(btn.dataset.reject, 'rejected'));
+  });
+}
+
+async function updateContributionStatus(id, status) {
+  const label = status === 'approved' ? 'confirmar o recebimento desta oferta' : 'rejeitar esta oferta';
+  if (!window.confirm(`Tem certeza que deseja ${label}? Confira antes se o Pix caiu mesmo na conta da igreja.`)) return;
+  try {
+    const res = await fetch('/.netlify/functions/admin-contributions', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erro ao atualizar oferta.');
+    loadSummary();
+  } catch (err) {
+    window.alert(err.message);
+  }
 }
 
 function openItemModal(itemId) {

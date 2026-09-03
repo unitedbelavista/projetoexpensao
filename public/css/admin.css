@@ -77,6 +77,8 @@
 
 .admin-section h2 { font-family: var(--font-heading); color: var(--brand-dark); }
 
+.admin-hint { color: var(--muted); font-size: 13px; margin: -6px 0 14px; }
+
 .admin-section-header {
   display: flex;
   justify-content: space-between;
@@ -112,6 +114,8 @@ table.data-table th { background: var(--brand-offwhite); font-size: 12px; text-t
   font-weight: 600;
   padding: 0;
 }
+
+.link-btn-danger { color: #a03d2b; margin-left: 12px; }
 
 .status-pill {
   padding: 3px 10px;

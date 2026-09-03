@@ -14,10 +14,8 @@
   </header>
 
   <main>
-    <section id="status-banner" class="status-banner" hidden></section>
-
     <section class="pix-info">
-      Chave Pix oficial: <strong>belavista@igrejaunited.com</strong> — Igreja United Bela Vista. Todas as ofertas feitas por aqui vão direto para essa chave, através do checkout seguro do Mercado Pago.
+      Chave Pix oficial: <strong>belavista@igrejaunited.com</strong> — Igreja United Bela Vista. Escolha um item abaixo, registre sua oferta e finalize o pagamento com essa chave direto no app do seu banco.
     </section>
 
     <section id="items" class="items-grid">
@@ -32,19 +30,33 @@
   <div id="modal-backdrop" class="modal-backdrop" hidden>
     <div class="modal">
       <button class="modal-close" id="modal-close" aria-label="Fechar">×</button>
-      <h2 id="modal-item-name">Ofertar</h2>
-      <p id="modal-item-remaining" class="modal-remaining"></p>
 
-      <label for="modal-amount">Valor da oferta (R$)</label>
-      <div class="chip-row" id="chip-row"></div>
-      <input type="number" id="modal-amount" min="5" step="0.01" placeholder="0,00" />
+      <div id="modal-form-view">
+        <h2 id="modal-item-name">Ofertar</h2>
+        <p id="modal-item-remaining" class="modal-remaining"></p>
 
-      <label for="modal-name">Seu nome (opcional)</label>
-      <input type="text" id="modal-name" placeholder="Como quer ser identificado" />
+        <label for="modal-amount">Valor da oferta (R$)</label>
+        <div class="chip-row" id="chip-row"></div>
+        <input type="number" id="modal-amount" min="5" step="0.01" placeholder="0,00" />
 
-      <button id="modal-submit" class="btn-primary">Ir para pagamento via Pix</button>
-      <p id="modal-error" class="modal-error" hidden></p>
-      <p class="modal-note">Você será direcionado ao checkout seguro do Mercado Pago para pagar via Pix.</p>
+        <label for="modal-name">Seu nome (opcional)</label>
+        <input type="text" id="modal-name" placeholder="Como quer ser identificado" />
+
+        <button id="modal-submit" class="btn-primary">Registrar oferta e pagar via Pix</button>
+        <p id="modal-error" class="modal-error" hidden></p>
+        <p class="modal-note">Depois de registrar, copie a chave Pix e finalize o pagamento no app do seu banco.</p>
+      </div>
+
+      <div id="modal-success-view" hidden>
+        <h2>Oferta registrada! 🙏</h2>
+        <p class="modal-remaining">Agora é só finalizar o pagamento via Pix com a chave abaixo. Assim que a igreja confirmar o recebimento, o valor aparece automaticamente no progresso do item.</p>
+        <div class="pix-key-box">
+          <span id="modal-pix-key">belavista@igrejaunited.com</span>
+          <button id="copy-pix-btn" class="btn-secondary-small" type="button">Copiar chave</button>
+        </div>
+        <p id="copy-feedback" class="copy-feedback" hidden>Chave copiada!</p>
+        <button id="modal-done-btn" class="btn-primary">Concluir</button>
+      </div>
     </div>
   </div>
 
