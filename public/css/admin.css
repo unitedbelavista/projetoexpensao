@@ -79,6 +79,41 @@
 
 .admin-hint { color: var(--muted); font-size: 13px; margin: -6px 0 14px; }
 
+.admin-section label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 14px 0 6px;
+  color: var(--brand-dark);
+}
+
+.admin-section input[type="text"],
+.admin-section input[type="file"],
+.admin-section textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--brand-cream);
+  background: var(--brand-offwhite);
+  color: var(--brand-dark);
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.admin-section textarea { resize: vertical; }
+
+.admin-section > .btn-primary { margin-top: 0; }
+
+#pillar-add-btn { margin-top: 16px; }
+
+.pillar-block {
+  border: 1px solid var(--brand-cream);
+  border-radius: 12px;
+  padding: 14px;
+  margin-top: 16px;
+  background: var(--brand-white);
+}
+
 .admin-section-header {
   display: flex;
   justify-content: space-between;

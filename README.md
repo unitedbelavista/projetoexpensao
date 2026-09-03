@@ -3,14 +3,16 @@
 App próprio para substituir a lista de casamento do iCasei usada hoje como
 gambiarra. Duas partes:
 
-1. **Página pública** (`/`): lista os itens que a igreja precisa comprar,
-   mostra quanto já foi arrecadado x meta de cada um, e deixa qualquer
-   pessoa registrar uma oferta do valor que quiser e pagar **via Pix**,
-   direto pelo app do banco.
+1. **Página pública** (`/`): mostra o texto de apresentação do projeto e os
+   pilares da igreja, lista os itens que a igreja precisa comprar (com
+   foto), mostra quanto já foi arrecadado x meta de cada um, e deixa
+   qualquer pessoa registrar uma oferta do valor que quiser e pagar **via
+   Pix**, direto pelo app do banco.
 2. **Painel administrativo** (`/admin`): login com senha única
-   compartilhada; mostra o total arrecadado/pendente/faltante por item e no
-   geral, permite cadastrar/editar/ocultar/excluir itens, e confirmar
-   manualmente as ofertas depois que o Pix cair na conta da igreja.
+   compartilhada; permite editar os textos e os pilares da página inicial,
+   cadastrar/editar/ocultar/excluir itens (com upload de foto), confirmar
+   manualmente as ofertas depois que o Pix cair na conta da igreja, e
+   mostra o total arrecadado/pendente/faltante por item e no geral.
 
 Chave Pix oficial da igreja (já configurada no app): `belavista@igrejaunited.com`.
 
@@ -23,6 +25,12 @@ Chave Pix oficial da igreja (já configurada no app): `belavista@igrejaunited.co
 - **Backend**: Netlify Functions (Node.js, serverless), na pasta
   `netlify/functions/`.
 - **Banco de dados**: Supabase (Postgres gratuito na nuvem).
+- **Conteúdo editável**: o título, o texto de introdução e os pilares da
+  página inicial ficam guardados na tabela `site_content` (uma linha só) e
+  são editados na seção "Conteúdo da página inicial" do painel admin.
+- **Fotos dos itens**: o painel admin faz upload direto da foto (sem
+  precisar hospedar em outro lugar) para o Supabase Storage, num bucket
+  público chamado `item-images`.
 - **Pagamentos**: **Pix manual, sem gateway de pagamento**. Quando alguém
   clica em "Ofertar", o app só registra a intenção de oferta como
   "pendente" no banco e mostra a chave Pix da igreja para a pessoa copiar e
@@ -54,7 +62,11 @@ Chave Pix oficial da igreja (já configurada no app): `belavista@igrejaunited.co
 3. (Opcional) Rode também `sql/seed.sql` para já cadastrar os 2 itens que
    estão hoje no iCasei (Projetor Epson e Lente Sigma). Se preferir, pode
    cadastrar tudo depois pelo próprio Painel Admin.
-4. Em **Project Settings > API**, copie:
+4. Volte no **SQL Editor > New query**, cole o conteúdo de
+   `sql/content_and_storage.sql` e rode. Isso cria a tabela com os textos
+   editáveis da página inicial (já com os pilares preenchidos) e o bucket
+   `item-images` onde as fotos dos itens são guardadas.
+5. Em **Project Settings > API**, copie:
    - `Project URL` → variável `SUPABASE_URL`
    - `service_role` key (não é a `anon` key!) → variável
      `SUPABASE_SERVICE_ROLE_KEY`
@@ -103,7 +115,10 @@ o DNS do domínio para o Netlify).
    teste direto no Supabase (tabela `contributions`) ou deixar como
    histórico.
 4. Confirme que dá para cadastrar/editar/ocultar/excluir itens pelo
-   painel.
+   painel, incluindo enviar uma foto pelo campo "Foto do item".
+5. Na seção "Conteúdo da página inicial" do painel, altere um texto (ou
+   adicione um pilar), clique em "Salvar conteúdo" e recarregue a página
+   pública para confirmar que a mudança apareceu.
 
 ## Rotina do administrador (confirmar ofertas)
 
@@ -121,6 +136,21 @@ com status **pending**. O fluxo esperado é:
 Só ofertas com status **approved** entram no valor arrecadado mostrado na
 página pública e nos totais do painel.
 
+## Editar o texto, os pilares e as fotos
+
+Tudo isso é feito pelo painel `/admin`, sem precisar mexer em código:
+
+- **Texto de apresentação e pilares**: na seção "Conteúdo da página
+  inicial", edite o título, o texto de introdução e o título/texto de cada
+  pilar. Dá para adicionar ou remover pilares com os botões "+ Adicionar
+  pilar" / "Remover pilar". Clique em "Salvar conteúdo" para publicar — a
+  mudança aparece na hora na página pública (é só recarregar).
+- **Fotos dos itens**: ao criar ou editar um item, use o campo "Foto do
+  item" para escolher uma imagem do computador (JPG, PNG, WEBP ou GIF, até
+  4MB) — ela é enviada automaticamente e uma prévia aparece antes de você
+  salvar. Se preferir, ainda dá para colar o link de uma imagem já
+  hospedada em outro lugar no campo "URL da imagem" logo abaixo.
+
 ## Estrutura de pastas
 
 ```
@@ -131,6 +161,7 @@ public/                  → site estático (página pública + admin)
   js/
 netlify/functions/       → backend (serverless)
   items.js               → GET público: lista itens + valor arrecadado
+  site-content.js         → GET público: título, texto e pilares da página inicial
   register-offer.js      → POST público: registra a oferta como "pending"
   admin-login.js         → POST: login do painel (senha única)
   admin-logout.js        → POST: logout
@@ -138,10 +169,13 @@ netlify/functions/       → backend (serverless)
   admin-items.js         → GET/POST/PUT/DELETE protegidos: gerenciar itens
   admin-contributions.js → PUT/DELETE protegidos: confirmar/rejeitar/excluir ofertas
   admin-summary.js       → GET protegido: totais e lista de ofertas
+  admin-site-content.js   → PUT protegido: editar título/texto/pilares
+  admin-upload-image.js   → POST protegido: envia a foto de um item pro Storage
   _shared/                → código compartilhado entre as functions acima
 sql/
-  schema.sql              → cria as tabelas no Supabase
+  schema.sql              → cria as tabelas items/contributions no Supabase
   seed.sql                → (opcional) já cadastra os 2 itens atuais
+  content_and_storage.sql → cria a tabela site_content + o bucket item-images
 ```
 
 ## Segurança
@@ -157,3 +191,6 @@ sql/
 - Como a confirmação é manual, vale reforçar com quem for administrar: só
   confirmar uma oferta depois de ver o Pix correspondente realmente
   chegar na conta do banco da igreja.
+- O upload de fotos e a edição do texto/pilares também exigem estar
+  logado no painel — visitantes da página pública não conseguem alterar
+  nada, só ver o conteúdo já publicado.

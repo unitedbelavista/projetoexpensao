@@ -29,6 +29,23 @@
 
     <section class="admin-section">
       <div class="admin-section-header">
+        <h2>Conteúdo da página inicial</h2>
+        <button id="content-save-btn" class="btn-primary">Salvar conteúdo</button>
+      </div>
+      <label>Título principal</label>
+      <input type="text" id="content-hero-title" />
+      <label>Texto de introdução</label>
+      <textarea id="content-hero-lead" rows="4"></textarea>
+      <label>Título da seção de pilares</label>
+      <input type="text" id="content-pillars-title" />
+      <div id="pillars-editor"></div>
+      <button id="pillar-add-btn" class="btn-secondary" type="button">+ Adicionar pilar</button>
+      <p id="content-save-feedback" class="copy-feedback" hidden>Conteúdo salvo!</p>
+      <p id="content-error" class="modal-error" hidden></p>
+    </section>
+
+    <section class="admin-section">
+      <div class="admin-section-header">
         <h2>Itens</h2>
         <button id="new-item-btn" class="btn-primary">+ Novo item</button>
       </div>
@@ -51,6 +68,10 @@
       <input type="text" id="item-name" />
       <label>Descrição</label>
       <input type="text" id="item-description" />
+      <label>Foto do item (opcional)</label>
+      <input type="file" id="item-image-file" accept="image/*" />
+      <p class="field-hint">JPG, PNG, WEBP ou GIF, até 4MB. Ou cole um link de imagem no campo abaixo.</p>
+      <img id="item-image-preview" class="image-preview" hidden />
       <label>URL da imagem (opcional)</label>
       <input type="text" id="item-image" />
       <label>Valor alvo (R$)</label>

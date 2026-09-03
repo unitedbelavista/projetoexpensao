@@ -17,6 +17,39 @@ async function loadItems() {
   }
 }
 
+function escapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+async function loadSiteContent() {
+  try {
+    const res = await fetch('/.netlify/functions/site-content');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.hero_title) document.getElementById('hero-title').textContent = data.hero_title;
+    if (data.hero_lead) document.getElementById('hero-lead').textContent = data.hero_lead;
+    renderPillars(data.pillars_title, data.pillars);
+  } catch (err) {
+    // se falhar, a pagina mantem os textos padrao que ja estao no HTML
+  }
+}
+
+function renderPillars(title, pillars) {
+  if (!Array.isArray(pillars) || !pillars.length) return;
+  document.getElementById('pillars-title').textContent = title || 'Nossos Pilares';
+  document.getElementById('pillars-grid').innerHTML = pillars.map((p, idx) => `
+    <article class="pillar-card">
+      <span class="pillar-number">${idx + 1}</span>
+      <h3>${escapeHtml(p.title)}</h3>
+      <p>${escapeHtml(p.text)}</p>
+    </article>
+  `).join('');
+  document.getElementById('pillars').hidden = false;
+}
+
 function renderItems() {
   const container = document.getElementById('items');
   if (!state.items.length) {
@@ -153,3 +186,4 @@ document.getElementById('modal-done-btn').addEventListener('click', () => {
 });
 
 loadItems();
+loadSiteContent();
