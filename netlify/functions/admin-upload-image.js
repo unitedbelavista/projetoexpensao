@@ -1,14 +1,16 @@
-// Protegido: upload da foto de um item para o Supabase Storage.
+// Protegido: upload de uma imagem (foto de item ou foto de fundo da
+// landing page) para o Supabase Storage.
 // POST /.netlify/functions/admin-upload-image
-// { filename, content_type, data_base64 }
-// Retorna { image_url } com o link publico da imagem enviada, para ser
-// usado no campo "image_url" do item (admin-items.js).
+// { filename, content_type, data_base64, folder? }
+// "folder" e opcional: "items" (padrao) ou "site" (fundo da landing page).
+// Retorna { image_url } com o link publico da imagem enviada.
 const { getSupabase } = require('./_shared/supabase');
 const { isAuthenticated } = require('./_shared/auth');
 
 const BUCKET = 'item-images';
 const MAX_BYTES = 4 * 1024 * 1024; // 4MB (o corpo da requisicao em base64 fica ~33% maior)
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const ALLOWED_FOLDERS = ['items', 'site'];
 
 exports.handler = async function (event) {
   if (!isAuthenticated(event)) {
@@ -20,7 +22,8 @@ exports.handler = async function (event) {
 
   try {
     const body = JSON.parse(event.body || '{}');
-    const { filename, content_type: contentType, data_base64: dataBase64 } = body;
+    const { filename, content_type: contentType, data_base64: dataBase64, folder } = body;
+    const safeFolder = ALLOWED_FOLDERS.includes(folder) ? folder : 'items';
 
     if (!filename || !contentType || !dataBase64) {
       return { statusCode: 400, body: JSON.stringify({ error: 'Arquivo invalido.' }) };
@@ -38,7 +41,7 @@ exports.handler = async function (event) {
     }
 
     const ext = (filename.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
-    const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const path = `${safeFolder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
     const supabase = getSupabase();
     const { error: uploadError } = await supabase.storage

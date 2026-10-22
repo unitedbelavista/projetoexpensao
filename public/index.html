@@ -4,6 +4,9 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Projeto de Expansão — Igreja United Bela Vista</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@400;600;700&display=swap" />
 <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body>
@@ -20,7 +23,15 @@
     </section>
 
     <section class="pix-info">
-      Chave Pix oficial: <strong>belavista@igrejaunited.com</strong> — Igreja United Bela Vista. Escolha um item abaixo, registre sua oferta e finalize o pagamento com essa chave direto no app do seu banco.
+      <p id="pix-intro-text">Escolha um item abaixo, registre sua oferta e finalize o pagamento com a chave Pix abaixo, direto no app do seu banco — ou aponte a câmera para o QR Code.</p>
+      <div class="pix-key-row">
+        <div class="pix-key-col">
+          <span class="pix-key-label">Chave Pix oficial</span>
+          <strong id="pix-key-display">belavista@igrejaunited.com</strong>
+          <span id="pix-merchant-display" class="pix-merchant-label"></span>
+        </div>
+        <div id="pix-qr-public" class="pix-qr-box" aria-label="QR Code Pix"></div>
+      </div>
     </section>
 
     <section id="items" class="items-grid">
@@ -42,6 +53,10 @@
 
         <label for="modal-amount">Valor da oferta (R$)</label>
         <div class="chip-row" id="chip-row"></div>
+        <div class="amount-warning" id="amount-warning-box">
+          <strong>Muito importante:</strong>
+          <span id="amount-warning-text">É necessário adicionar R$ 0,11 à sua oferta para que possamos identificar que o pagamento é para o Projeto de Expansão. Ou seja: se quiser ofertar R$ 1,00, ofereça R$ 1,11.</span>
+        </div>
         <input type="number" id="modal-amount" min="5" step="0.01" placeholder="0,00" />
 
         <label for="modal-name">Seu nome (opcional)</label>
@@ -60,11 +75,15 @@
           <button id="copy-pix-btn" class="btn-secondary-small" type="button">Copiar chave</button>
         </div>
         <p id="copy-feedback" class="copy-feedback" hidden>Chave copiada!</p>
+        <div id="pix-qr-modal" class="pix-qr-box pix-qr-box-modal" aria-label="QR Code Pix"></div>
         <button id="modal-done-btn" class="btn-primary">Concluir</button>
       </div>
     </div>
   </div>
 
+  <script src="/js/vendor/qrcode.js"></script>
+  <script src="/js/fonts.js"></script>
+  <script src="/js/pix-qrcode.js"></script>
   <script src="/js/main.js"></script>
 </body>
 </html>

@@ -106,6 +106,28 @@
 
 #pillar-add-btn { margin-top: 16px; }
 
+.admin-subheading {
+  font-family: var(--font-heading);
+  color: var(--brand-dark);
+  font-size: 16px;
+  margin: 26px 0 4px;
+  padding-top: 18px;
+  border-top: 1px solid var(--brand-cream);
+}
+
+.admin-section select {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--brand-cream);
+  background: var(--brand-offwhite);
+  color: var(--brand-dark);
+  font-size: 14px;
+  font-family: inherit;
+}
+
+#hero-bg-remove-btn { display: inline-block; margin-top: 8px; }
+
 .pillar-block {
   border: 1px solid var(--brand-cream);
   border-radius: 12px;

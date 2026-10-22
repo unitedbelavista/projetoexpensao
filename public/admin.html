@@ -4,6 +4,9 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Painel Admin — Projeto de Expansão</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@400;600;700&display=swap" />
 <link rel="stylesheet" href="/css/style.css" />
 <link rel="stylesheet" href="/css/admin.css" />
 </head>
@@ -36,10 +39,41 @@
       <input type="text" id="content-hero-title" />
       <label>Texto de introdução</label>
       <textarea id="content-hero-lead" rows="4"></textarea>
+
+      <label>Foto de fundo da página inicial (opcional)</label>
+      <input type="file" id="hero-bg-file" accept="image/*" />
+      <p class="field-hint">JPG, PNG, WEBP ou GIF, até 4MB. Se não enviar nenhuma foto, o fundo fica na cor marrom/terracota padrão.</p>
+      <img id="hero-bg-preview" class="image-preview" hidden />
+      <button id="hero-bg-remove-btn" class="link-btn link-btn-danger" type="button" hidden>Remover foto de fundo</button>
+      <input type="hidden" id="hero-background-url" />
+
       <label>Título da seção de pilares</label>
       <input type="text" id="content-pillars-title" />
       <div id="pillars-editor"></div>
       <button id="pillar-add-btn" class="btn-secondary" type="button">+ Adicionar pilar</button>
+
+      <h3 class="admin-subheading">Fontes do site</h3>
+      <p class="admin-hint">Escolha as fontes do Google Fonts usadas nos títulos e no corpo do texto. Padrão: Playfair Display (títulos) + Montserrat (corpo).</p>
+      <label>Fonte dos títulos</label>
+      <select id="content-heading-font"></select>
+      <label>Fonte do corpo de texto</label>
+      <select id="content-body-font"></select>
+
+      <h3 class="admin-subheading">Pix</h3>
+      <p class="admin-hint">Esses dados alimentam tanto o texto da chave Pix quanto o QR Code (padrão do Banco Central) exibido na página pública.</p>
+      <label>Chave Pix</label>
+      <input type="text" id="content-pix-key" />
+      <label>Nome do recebedor (até 25 caracteres, aparece no QR Code)</label>
+      <input type="text" id="content-pix-merchant-name" maxlength="25" />
+      <label>Cidade do recebedor (até 15 caracteres, aparece no QR Code)</label>
+      <input type="text" id="content-pix-merchant-city" maxlength="15" />
+      <label>Texto de introdução da seção de Pix</label>
+      <textarea id="content-pix-intro-text" rows="3"></textarea>
+
+      <h3 class="admin-subheading">Aviso sobre o valor da oferta</h3>
+      <label>Texto do aviso "Muito Importante" (ex: pedir para acrescentar R$ 0,11)</label>
+      <textarea id="content-amount-warning-text" rows="3"></textarea>
+
       <p id="content-save-feedback" class="copy-feedback" hidden>Conteúdo salvo!</p>
       <p id="content-error" class="modal-error" hidden></p>
     </section>
@@ -83,6 +117,7 @@
     </div>
   </div>
 
+  <script src="/js/fonts.js"></script>
   <script src="/js/admin.js"></script>
 </body>
 </html>

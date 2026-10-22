@@ -1,6 +1,7 @@
 /* Paleta oficial United Bela Vista (extraída do padrão usado em
    Membros_United_Bela_Vista.pptx): terracota + marrom escuro + tons
-   de creme/taupe, com Cambria para títulos e Calibri para o corpo. */
+   de creme/taupe. Fontes padrão: Playfair Display (títulos) e
+   Montserrat (corpo) — editáveis pelo admin via Google Fonts. */
 :root {
   --brand-dark: #3d2b1f;
   --brand-terracotta: #7d3e2e;
@@ -21,8 +22,8 @@
   --track: var(--brand-cream);
   --radius: 14px;
 
-  --font-heading: Cambria, Georgia, "Times New Roman", serif;
-  --font-body: Calibri, "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-heading: "Playfair Display", Cambria, Georgia, "Times New Roman", serif;
+  --font-body: "Montserrat", Calibri, "Segoe UI", system-ui, -apple-system, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -36,6 +37,9 @@ body {
 
 .hero {
   background: var(--brand-terracotta);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   color: var(--brand-offwhite);
   padding: 56px 20px 64px;
   text-align: center;
@@ -91,6 +95,41 @@ main {
 }
 
 .pix-info strong { color: var(--brand-terracotta-dark); }
+.pix-info p { margin: 0 0 12px; }
+
+.pix-key-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.pix-key-col { display: flex; flex-direction: column; gap: 2px; }
+.pix-key-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.pix-key-col strong { font-size: 15px; color: var(--brand-terracotta-dark); word-break: break-all; }
+.pix-merchant-label { font-size: 12px; color: var(--muted); }
+
+.pix-qr-box {
+  background: var(--brand-white);
+  border: 1px solid var(--brand-dusty);
+  border-radius: 10px;
+  padding: 6px;
+  width: 104px;
+  height: 104px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pix-qr-box svg { width: 100%; height: 100%; display: block; }
+
+.pix-qr-box-modal {
+  width: 150px;
+  height: 150px;
+  margin: 14px auto 6px;
+}
 
 .pillars { margin-bottom: 28px; }
 
@@ -114,6 +153,14 @@ main {
   border-radius: var(--radius);
   padding: 20px;
   box-shadow: 0 8px 22px rgba(61, 43, 31, 0.06);
+  transform-style: preserve-3d;
+  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+  will-change: transform;
+  cursor: default;
+}
+
+.pillar-card:hover {
+  box-shadow: 0 16px 34px rgba(61, 43, 31, 0.16);
 }
 
 .pillar-number {
@@ -288,6 +335,26 @@ footer {
 }
 
 .chip.active, .chip:hover { background: var(--brand-terracotta); color: var(--brand-offwhite); }
+
+.amount-warning {
+  background: #fff4e0;
+  border: 1px solid #e8b55f;
+  color: #7a4a0a;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  margin: 2px 0 12px;
+}
+
+.amount-warning strong {
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 11.5px;
+  margin-bottom: 2px;
+  color: #9a5a0a;
+}
 
 .modal .btn-primary { width: 100%; margin-top: 20px; }
 

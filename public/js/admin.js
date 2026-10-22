@@ -237,6 +237,30 @@ async function handleImageFileChange(e) {
   }
 }
 
+function populateFontSelect(selectId, options, selectedValue) {
+  const select = document.getElementById(selectId);
+  select.innerHTML = options.map((f) => `<option value="${f.name}">${f.name}</option>`).join('');
+  if (selectedValue && !options.some((f) => f.name === selectedValue)) {
+    select.insertAdjacentHTML('beforeend', `<option value="${selectedValue}">${selectedValue}</option>`);
+  }
+  select.value = selectedValue || options[0].name;
+}
+
+function updateHeroBgPreview(url) {
+  const preview = document.getElementById('hero-bg-preview');
+  const removeBtn = document.getElementById('hero-bg-remove-btn');
+  document.getElementById('hero-background-url').value = url || '';
+  if (url) {
+    preview.src = url;
+    preview.hidden = false;
+    removeBtn.hidden = false;
+  } else {
+    preview.src = '';
+    preview.hidden = true;
+    removeBtn.hidden = true;
+  }
+}
+
 async function loadSiteContent() {
   try {
     const res = await fetch('/.netlify/functions/site-content');
@@ -247,8 +271,43 @@ async function loadSiteContent() {
     document.getElementById('content-pillars-title').value = data.pillars_title || '';
     pillarsState = Array.isArray(data.pillars) ? data.pillars.map((p) => ({ ...p })) : [];
     renderPillarsEditor();
+
+    updateHeroBgPreview(data.hero_background_url || '');
+
+    if (typeof HEADING_FONT_OPTIONS !== 'undefined') {
+      populateFontSelect('content-heading-font', HEADING_FONT_OPTIONS, data.heading_font || 'Playfair Display');
+      populateFontSelect('content-body-font', BODY_FONT_OPTIONS, data.body_font || 'Montserrat');
+    }
+
+    document.getElementById('content-pix-key').value = data.pix_key || '';
+    document.getElementById('content-pix-merchant-name').value = data.pix_merchant_name || '';
+    document.getElementById('content-pix-merchant-city').value = data.pix_merchant_city || '';
+    document.getElementById('content-pix-intro-text').value = data.pix_intro_text || '';
+    document.getElementById('content-amount-warning-text').value = data.amount_warning_text || '';
   } catch (err) {
     // se falhar, os campos ficam em branco e a pessoa pode preencher/tentar de novo
+  }
+}
+
+async function handleHeroBgFileChange(e) {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  const errorEl = document.getElementById('content-error');
+  errorEl.hidden = true;
+
+  try {
+    const dataBase64 = await fileToBase64(file);
+    const res = await fetch('/.netlify/functions/admin-upload-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename: file.name, content_type: file.type, data_base64: dataBase64, folder: 'site' }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erro ao enviar imagem.');
+    updateHeroBgPreview(data.image_url);
+  } catch (err) {
+    errorEl.textContent = err.message;
+    errorEl.hidden = false;
   }
 }
 
@@ -303,8 +362,16 @@ async function saveSiteContent() {
       body: JSON.stringify({
         hero_title: document.getElementById('content-hero-title').value.trim(),
         hero_lead: document.getElementById('content-hero-lead').value.trim(),
+        hero_background_url: document.getElementById('hero-background-url').value.trim(),
         pillars_title: document.getElementById('content-pillars-title').value.trim(),
         pillars: pillarsState.filter((p) => (p.title || '').trim() || (p.text || '').trim()),
+        heading_font: document.getElementById('content-heading-font').value,
+        body_font: document.getElementById('content-body-font').value,
+        pix_key: document.getElementById('content-pix-key').value.trim(),
+        pix_merchant_name: document.getElementById('content-pix-merchant-name').value.trim(),
+        pix_merchant_city: document.getElementById('content-pix-merchant-city').value.trim(),
+        pix_intro_text: document.getElementById('content-pix-intro-text').value.trim(),
+        amount_warning_text: document.getElementById('content-amount-warning-text').value.trim(),
       }),
     });
     const data = await res.json();
@@ -380,5 +447,7 @@ document.getElementById('item-delete-btn').addEventListener('click', deleteItem)
 document.getElementById('item-image-file').addEventListener('change', handleImageFileChange);
 document.getElementById('content-save-btn').addEventListener('click', saveSiteContent);
 document.getElementById('pillar-add-btn').addEventListener('click', addPillar);
+document.getElementById('hero-bg-file').addEventListener('change', handleHeroBgFileChange);
+document.getElementById('hero-bg-remove-btn').addEventListener('click', () => updateHeroBgPreview(''));
 
 checkSession();

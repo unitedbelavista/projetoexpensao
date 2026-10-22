@@ -9,28 +9,51 @@ gambiarra. Duas partes:
    qualquer pessoa registrar uma oferta do valor que quiser e pagar **via
    Pix**, direto pelo app do banco.
 2. **Painel administrativo** (`/admin`): login com senha única
-   compartilhada; permite editar os textos e os pilares da página inicial,
-   cadastrar/editar/ocultar/excluir itens (com upload de foto), confirmar
+   compartilhada; permite editar **tudo** da página inicial sem precisar de
+   código — textos, foto de fundo, fontes, pilares, chave Pix (com QR
+   Code), aviso de valor e itens (com upload de foto) — confirma
    manualmente as ofertas depois que o Pix cair na conta da igreja, e
    mostra o total arrecadado/pendente/faltante por item e no geral.
 
-Chave Pix oficial da igreja (já configurada no app): `belavista@igrejaunited.com`.
+Chave Pix oficial da igreja (editável no painel admin, já configurada como
+padrão): `belavista@igrejaunited.com`.
+
+> **Aviso dos R$ 0,11**: para a igreja conseguir identificar que um Pix é
+> referente a este projeto (já que não há gateway de pagamento avisando
+> automaticamente), a página pede para quem for ofertar somar R$ 0,11 ao
+> valor pretendido (ex: para ofertar R$ 1,00, pagar R$ 1,11). Esse aviso e
+> os botões de valor sugerido já vêm com os centavos inclusos, e o texto do
+> aviso é editável no painel.
 
 ## Como funciona por baixo dos panos
 
 - **Frontend**: HTML/CSS/JS puro (sem framework), na pasta `public/`,
   seguindo a identidade visual da United (terracota `#7D3E2E`, marrom
-  escuro `#3D2B1F`, tons de creme/taupe, fontes Cambria + Calibri — o
-  mesmo padrão usado em `Membros_United_Bela_Vista.pptx`).
+  escuro `#3D2B1F`, tons de creme/taupe). Fontes padrão: **Playfair
+  Display** (títulos) e **Montserrat** (corpo) — carregadas do Google
+  Fonts e trocáveis pelo painel admin (ver "Editar o texto, as fontes, o
+  fundo e as fotos" abaixo).
 - **Backend**: Netlify Functions (Node.js, serverless), na pasta
   `netlify/functions/`.
 - **Banco de dados**: Supabase (Postgres gratuito na nuvem).
-- **Conteúdo editável**: o título, o texto de introdução e os pilares da
-  página inicial ficam guardados na tabela `site_content` (uma linha só) e
-  são editados na seção "Conteúdo da página inicial" do painel admin.
-- **Fotos dos itens**: o painel admin faz upload direto da foto (sem
-  precisar hospedar em outro lugar) para o Supabase Storage, num bucket
-  público chamado `item-images`.
+- **Conteúdo editável**: título, texto de introdução, foto de fundo,
+  pilares, fontes, chave Pix (+ nome/cidade do recebedor para o QR Code) e
+  texto do aviso de valor — tudo fica guardado na tabela `site_content`
+  (uma linha só) e é editado na seção "Conteúdo da página inicial" do
+  painel admin.
+- **Fotos e foto de fundo**: o painel admin faz upload direto da imagem
+  (sem precisar hospedar em outro lugar) para o Supabase Storage, no
+  bucket público `item-images` — fotos de item ficam em `item-images/items/`
+  e a foto de fundo da página em `item-images/site/`.
+- **QR Code Pix**: gerado no navegador (sem depender de API externa) a
+  partir da chave Pix + nome/cidade do recebedor, seguindo o padrão **BR
+  Code / EMV do Banco Central** — o mesmo formato que qualquer app de
+  banco reconhece ao escanear. A biblioteca de geração do QR Code
+  (`qrcode-generator`, MIT, de Kazuhiko Arase) está vendorizada localmente
+  em `public/js/vendor/qrcode.js`, sem depender de CDN.
+- **Efeito 3D dos pilares**: puramente visual (CSS + JS em
+  `public/js/main.js`), sem nenhuma configuração — os cards inclinam
+  suavemente acompanhando o mouse.
 - **Pagamentos**: **Pix manual, sem gateway de pagamento**. Quando alguém
   clica em "Ofertar", o app só registra a intenção de oferta como
   "pendente" no banco e mostra a chave Pix da igreja para a pessoa copiar e
@@ -66,7 +89,12 @@ Chave Pix oficial da igreja (já configurada no app): `belavista@igrejaunited.co
    `sql/content_and_storage.sql` e rode. Isso cria a tabela com os textos
    editáveis da página inicial (já com os pilares preenchidos) e o bucket
    `item-images` onde as fotos dos itens são guardadas.
-5. Em **Project Settings > API**, copie:
+5. Rode também `sql/phase6_editable_branding.sql` (só uma vez) — adiciona
+   os campos novos de foto de fundo, fontes, Pix (chave, nome e cidade do
+   recebedor) e o texto do aviso de valor na tabela `site_content`. Se
+   você já tinha rodado esse app antes da Fase 6, é só rodar este arquivo
+   a mais; não precisa refazer os passos anteriores.
+6. Em **Project Settings > API**, copie:
    - `Project URL` → variável `SUPABASE_URL`
    - `service_role` key (não é a `anon` key!) → variável
      `SUPABASE_SERVICE_ROLE_KEY`
@@ -119,6 +147,12 @@ o DNS do domínio para o Netlify).
 5. Na seção "Conteúdo da página inicial" do painel, altere um texto (ou
    adicione um pilar), clique em "Salvar conteúdo" e recarregue a página
    pública para confirmar que a mudança apareceu.
+6. Ainda nessa seção, envie uma foto de fundo, troque as fontes e/ou
+   edite a chave Pix, nome e cidade do recebedor — salve e recarregue a
+   página pública para ver o fundo, as fontes e o novo QR Code do Pix.
+7. Abra a página pública num celular e escaneie o QR Code do Pix com o
+   app do seu banco, só para confirmar que ele reconhece a chave
+   corretamente antes de divulgar para a congregação.
 
 ## Rotina do administrador (confirmar ofertas)
 
@@ -136,15 +170,34 @@ com status **pending**. O fluxo esperado é:
 Só ofertas com status **approved** entram no valor arrecadado mostrado na
 página pública e nos totais do painel.
 
-## Editar o texto, os pilares e as fotos
+## Editar o texto, as fontes, o fundo e as fotos
 
 Tudo isso é feito pelo painel `/admin`, sem precisar mexer em código:
 
 - **Texto de apresentação e pilares**: na seção "Conteúdo da página
   inicial", edite o título, o texto de introdução e o título/texto de cada
   pilar. Dá para adicionar ou remover pilares com os botões "+ Adicionar
-  pilar" / "Remover pilar". Clique em "Salvar conteúdo" para publicar — a
-  mudança aparece na hora na página pública (é só recarregar).
+  pilar" / "Remover pilar".
+- **Foto de fundo da página inicial**: no campo "Foto de fundo da página
+  inicial", escolha uma imagem do computador (JPG, PNG, WEBP ou GIF, até
+  4MB). Se quiser voltar para a cor terracota padrão, clique em "Remover
+  foto de fundo".
+- **Fontes do site**: escolha a fonte dos títulos e a fonte do corpo de
+  texto nos campos "Fonte dos títulos" / "Fonte do corpo de texto" — a
+  lista já vem com Playfair Display, Montserrat e outras opções do Google
+  Fonts. A troca vale tanto para a página pública quanto para o painel.
+- **Chave Pix e QR Code**: no bloco "Pix", edite a chave Pix, o nome e a
+  cidade do recebedor (esses dois últimos aparecem dentro do QR Code, por
+  exigência do padrão do Banco Central — até 25 e 15 caracteres
+  respectivamente) e o texto de introdução da seção de Pix. A página
+  pública e a tela de sucesso da oferta atualizam a chave, o texto e o QR
+  Code automaticamente.
+- **Aviso sobre o valor da oferta**: edite o texto do aviso "Muito
+  Importante" que aparece acima do campo de valor no formulário de oferta
+  (por padrão, pede para somar R$ 0,11 ao valor pretendido).
+- Depois de qualquer alteração acima, clique em "Salvar conteúdo" para
+  publicar — a mudança aparece na hora na página pública (é só
+  recarregar).
 - **Fotos dos itens**: ao criar ou editar um item, use o campo "Foto do
   item" para escolher uma imagem do computador (JPG, PNG, WEBP ou GIF, até
   4MB) — ela é enviada automaticamente e uma prévia aparece antes de você
@@ -159,9 +212,15 @@ public/                  → site estático (página pública + admin)
   admin.html
   css/
   js/
+    fonts.js              → lista de fontes do Google Fonts + helpers de carregamento
+    pix-qrcode.js          → gera o payload BR Code/EMV do Pix + desenha o QR Code
+    main.js
+    admin.js
+    vendor/
+      qrcode.js            → biblioteca vendorizada (qrcode-generator, MIT) usada pelo pix-qrcode.js
 netlify/functions/       → backend (serverless)
   items.js               → GET público: lista itens + valor arrecadado
-  site-content.js         → GET público: título, texto e pilares da página inicial
+  site-content.js         → GET público: título, texto, fundo, fontes, pilares e dados do Pix
   register-offer.js      → POST público: registra a oferta como "pending"
   admin-login.js         → POST: login do painel (senha única)
   admin-logout.js        → POST: logout
@@ -169,13 +228,14 @@ netlify/functions/       → backend (serverless)
   admin-items.js         → GET/POST/PUT/DELETE protegidos: gerenciar itens
   admin-contributions.js → PUT/DELETE protegidos: confirmar/rejeitar/excluir ofertas
   admin-summary.js       → GET protegido: totais e lista de ofertas
-  admin-site-content.js   → PUT protegido: editar título/texto/pilares
-  admin-upload-image.js   → POST protegido: envia a foto de um item pro Storage
+  admin-site-content.js   → PUT protegido: editar título/texto/fundo/fontes/pilares/Pix
+  admin-upload-image.js   → POST protegido: envia foto de item ou de fundo pro Storage
   _shared/                → código compartilhado entre as functions acima
 sql/
-  schema.sql              → cria as tabelas items/contributions no Supabase
-  seed.sql                → (opcional) já cadastra os 2 itens atuais
-  content_and_storage.sql → cria a tabela site_content + o bucket item-images
+  schema.sql                     → cria as tabelas items/contributions no Supabase
+  seed.sql                       → (opcional) já cadastra os 2 itens atuais
+  content_and_storage.sql        → cria a tabela site_content + o bucket item-images
+  phase6_editable_branding.sql   → adiciona os campos de fundo/fontes/Pix/aviso
 ```
 
 ## Segurança

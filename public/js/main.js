@@ -1,5 +1,4 @@
-const state = { items: [], selectedItem: null };
-const PIX_KEY = 'belavista@igrejaunited.com';
+const state = { items: [], selectedItem: null, siteContent: null };
 
 function currency(value) {
   return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -29,12 +28,70 @@ async function loadSiteContent() {
     const res = await fetch('/.netlify/functions/site-content');
     if (!res.ok) return;
     const data = await res.json();
+    state.siteContent = data;
+
     if (data.hero_title) document.getElementById('hero-title').textContent = data.hero_title;
     if (data.hero_lead) document.getElementById('hero-lead').textContent = data.hero_lead;
+    applyHeroBackground(data.hero_background_url);
     renderPillars(data.pillars_title, data.pillars);
+
+    if (typeof applySiteFonts === 'function') {
+      applySiteFonts(data.heading_font, data.body_font);
+    }
+
+    if (data.pix_intro_text) document.getElementById('pix-intro-text').textContent = data.pix_intro_text;
+    const pixKey = data.pix_key || 'belavista@igrejaunited.com';
+    document.getElementById('pix-key-display').textContent = pixKey;
+    document.getElementById('pix-merchant-display').textContent = data.pix_merchant_name
+      ? `— ${data.pix_merchant_name}`
+      : '';
+    document.getElementById('modal-pix-key').textContent = pixKey;
+
+    if (typeof renderPixQrCode === 'function') {
+      const qrOpts = {
+        key: pixKey,
+        merchantName: data.pix_merchant_name,
+        merchantCity: data.pix_merchant_city,
+      };
+      renderPixQrCode('pix-qr-public', qrOpts);
+      renderPixQrCode('pix-qr-modal', qrOpts);
+    }
+
+    if (data.amount_warning_text) {
+      document.getElementById('amount-warning-text').textContent = data.amount_warning_text;
+    }
   } catch (err) {
     // se falhar, a pagina mantem os textos padrao que ja estao no HTML
   }
+}
+
+function applyHeroBackground(url) {
+  const hero = document.querySelector('.hero');
+  if (!hero) return;
+  if (url) {
+    hero.style.backgroundImage = `linear-gradient(rgba(61, 43, 31, 0.55), rgba(61, 43, 31, 0.55)), url("${url}")`;
+    hero.classList.add('has-bg-image');
+  } else {
+    hero.style.backgroundImage = '';
+    hero.classList.remove('has-bg-image');
+  }
+}
+
+// Efeito 3D: o card acompanha o mouse com uma leve inclinação em
+// perspectiva, voltando ao normal quando o mouse sai.
+function attachTiltEffect(card) {
+  const maxTilt = 10;
+  card.addEventListener('mousemove', (e) => {
+    const rect = card.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width;
+    const py = (e.clientY - rect.top) / rect.height;
+    const rotateX = (0.5 - py) * maxTilt;
+    const rotateY = (px - 0.5) * maxTilt;
+    card.style.transform = `perspective(700px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.03, 1.03, 1.03)`;
+  });
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = '';
+  });
 }
 
 function renderPillars(title, pillars) {
@@ -48,6 +105,7 @@ function renderPillars(title, pillars) {
     </article>
   `).join('');
   document.getElementById('pillars').hidden = false;
+  document.querySelectorAll('.pillar-card').forEach(attachTiltEffect);
 }
 
 function renderItems() {
@@ -99,9 +157,11 @@ function openModal(itemId) {
   submitBtn.disabled = false;
   submitBtn.textContent = 'Registrar oferta e pagar via Pix';
 
-  const chipValues = [25, 50, 100, 250];
+  const chipValues = [25.11, 50.11, 100.11, 250.11];
   const chipRow = document.getElementById('chip-row');
-  chipRow.innerHTML = chipValues.map((v) => `<span class="chip" data-value="${v}">R$ ${v}</span>`).join('');
+  chipRow.innerHTML = chipValues
+    .map((v) => `<span class="chip" data-value="${v.toFixed(2)}">R$ ${v.toFixed(2).replace('.', ',')}</span>`)
+    .join('');
   chipRow.querySelectorAll('.chip').forEach((chip) => {
     chip.addEventListener('click', () => {
       document.getElementById('modal-amount').value = chip.dataset.value;
@@ -126,9 +186,10 @@ function showSuccessView() {
 
 async function copyPixKey() {
   const feedback = document.getElementById('copy-feedback');
+  const pixKey = (state.siteContent && state.siteContent.pix_key) || 'belavista@igrejaunited.com';
   try {
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      await navigator.clipboard.writeText(PIX_KEY);
+      await navigator.clipboard.writeText(pixKey);
     }
   } catch (err) {
     // clipboard indisponível neste navegador; a pessoa pode copiar a chave manualmente
