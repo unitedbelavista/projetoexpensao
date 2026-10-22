@@ -49,9 +49,9 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-size: 12px;
-  opacity: 0.8;
+  opacity: 0.75;
   margin: 0 0 12px;
-  color: var(--brand-dusty);
+  color: inherit;
 }
 
 .hero h1 {
@@ -64,7 +64,8 @@ body {
 .lead {
   max-width: 560px;
   margin: 0 auto;
-  color: rgba(242, 237, 232, 0.9);
+  color: inherit;
+  opacity: 0.9;
   line-height: 1.6;
 }
 

@@ -273,6 +273,7 @@ async function loadSiteContent() {
     renderPillarsEditor();
 
     updateHeroBgPreview(data.hero_background_url || '');
+    document.getElementById('content-hero-text-color').value = data.hero_text_color || '#f2ede8';
 
     if (typeof HEADING_FONT_OPTIONS !== 'undefined') {
       populateFontSelect('content-heading-font', HEADING_FONT_OPTIONS, data.heading_font || 'Playfair Display');
@@ -363,6 +364,7 @@ async function saveSiteContent() {
         hero_title: document.getElementById('content-hero-title').value.trim(),
         hero_lead: document.getElementById('content-hero-lead').value.trim(),
         hero_background_url: document.getElementById('hero-background-url').value.trim(),
+        hero_text_color: document.getElementById('content-hero-text-color').value,
         pillars_title: document.getElementById('content-pillars-title').value.trim(),
         pillars: pillarsState.filter((p) => (p.title || '').trim() || (p.text || '').trim()),
         heading_font: document.getElementById('content-heading-font').value,

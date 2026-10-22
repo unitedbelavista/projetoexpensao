@@ -128,6 +128,25 @@
 
 #hero-bg-remove-btn { display: inline-block; margin-top: 8px; }
 
+.color-field-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.color-field-row input[type="color"] {
+  width: 48px;
+  height: 40px;
+  padding: 2px;
+  border-radius: 8px;
+  border: 1px solid var(--brand-cream);
+  background: var(--brand-offwhite);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.color-field-row .field-hint { margin: 0; }
+
 .pillar-block {
   border: 1px solid var(--brand-cream);
   border-radius: 12px;

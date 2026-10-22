@@ -22,6 +22,7 @@ exports.handler = async function (event) {
       hero_title: heroTitle,
       hero_lead: heroLead,
       hero_background_url: heroBackgroundUrl,
+      hero_text_color: heroTextColor,
       pillars_title: pillarsTitle,
       pillars,
       heading_font: headingFont,
@@ -37,6 +38,7 @@ exports.handler = async function (event) {
     if (heroTitle !== undefined) updates.hero_title = heroTitle;
     if (heroLead !== undefined) updates.hero_lead = heroLead;
     if (heroBackgroundUrl !== undefined) updates.hero_background_url = heroBackgroundUrl;
+    if (heroTextColor !== undefined) updates.hero_text_color = heroTextColor;
     if (pillarsTitle !== undefined) updates.pillars_title = pillarsTitle;
     if (pillars !== undefined) {
       if (!Array.isArray(pillars)) {

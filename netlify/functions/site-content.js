@@ -10,7 +10,7 @@ exports.handler = async function () {
     const { data, error } = await supabase
       .from('site_content')
       .select(
-        'hero_title, hero_lead, hero_background_url, pillars_title, pillars, ' +
+        'hero_title, hero_lead, hero_background_url, hero_text_color, pillars_title, pillars, ' +
         'heading_font, body_font, pix_key, pix_merchant_name, pix_merchant_city, ' +
         'pix_intro_text, amount_warning_text'
       )
@@ -25,6 +25,7 @@ exports.handler = async function () {
         hero_title: data.hero_title,
         hero_lead: data.hero_lead,
         hero_background_url: data.hero_background_url || '',
+        hero_text_color: data.hero_text_color || '#f2ede8',
         pillars_title: data.pillars_title,
         pillars: data.pillars || [],
         heading_font: data.heading_font || 'Playfair Display',

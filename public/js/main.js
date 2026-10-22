@@ -33,6 +33,7 @@ async function loadSiteContent() {
     if (data.hero_title) document.getElementById('hero-title').textContent = data.hero_title;
     if (data.hero_lead) document.getElementById('hero-lead').textContent = data.hero_lead;
     applyHeroBackground(data.hero_background_url);
+    applyHeroTextColor(data.hero_text_color);
     renderPillars(data.pillars_title, data.pillars);
 
     if (typeof applySiteFonts === 'function') {
@@ -63,6 +64,15 @@ async function loadSiteContent() {
   } catch (err) {
     // se falhar, a pagina mantem os textos padrao que ja estao no HTML
   }
+}
+
+// Cor do texto do topo (eyebrow, título e texto de introdução) — editável
+// pelo admin porque uma foto de fundo clara pode fazer o texto claro
+// padrão "sumir" por falta de contraste.
+function applyHeroTextColor(color) {
+  const hero = document.querySelector('.hero');
+  if (!hero) return;
+  hero.style.color = color || '';
 }
 
 function applyHeroBackground(url) {

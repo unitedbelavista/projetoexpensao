@@ -13,6 +13,7 @@
 
 alter table site_content
   add column if not exists hero_background_url text,
+  add column if not exists hero_text_color text not null default '#f2ede8',
   add column if not exists heading_font text not null default 'Playfair Display',
   add column if not exists body_font text not null default 'Montserrat',
   add column if not exists pix_key text not null default 'belavista@igrejaunited.com',
@@ -26,6 +27,7 @@ alter table site_content
 -- sido executado antes desta migracao.
 update site_content
 set
+  hero_text_color = coalesce(hero_text_color, '#f2ede8'),
   heading_font = coalesce(heading_font, 'Playfair Display'),
   body_font = coalesce(body_font, 'Montserrat'),
   pix_key = coalesce(pix_key, 'belavista@igrejaunited.com'),
