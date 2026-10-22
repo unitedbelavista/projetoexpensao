@@ -262,32 +262,54 @@ function updateHeroBgPreview(url) {
 }
 
 async function loadSiteContent() {
+  let data;
   try {
     const res = await fetch('/.netlify/functions/site-content');
     if (!res.ok) return;
-    const data = await res.json();
+    data = await res.json();
+  } catch (err) {
+    // se a requisicao falhar, os campos ficam em branco e a pessoa pode tentar de novo
+    return;
+  }
+
+  // Cada bloco abaixo e isolado: um problema num campo novo nao deve
+  // impedir os campos que ja existiam (titulo, texto, pilares) de serem
+  // preenchidos normalmente.
+  try {
     document.getElementById('content-hero-title').value = data.hero_title || '';
     document.getElementById('content-hero-lead').value = data.hero_lead || '';
     document.getElementById('content-pillars-title').value = data.pillars_title || '';
     pillarsState = Array.isArray(data.pillars) ? data.pillars.map((p) => ({ ...p })) : [];
     renderPillarsEditor();
+  } catch (err) { /* campos ficam em branco, pessoa pode preencher na mao */ }
 
+  try {
     updateHeroBgPreview(data.hero_background_url || '');
-    document.getElementById('content-hero-text-color').value = data.hero_text_color || '#f2ede8';
+  } catch (err) { /* preview de fundo fica vazio */ }
 
+  try {
+    document.getElementById('content-hero-title-color').value = data.hero_title_color || '#f2ede8';
+    document.getElementById('content-hero-eyebrow-color').value = data.hero_eyebrow_color || '#b09080';
+    document.getElementById('content-hero-lead-color').value = data.hero_lead_color || '#f2ede8';
+  } catch (err) { /* cores ficam no padrao do input */ }
+
+  try {
     if (typeof HEADING_FONT_OPTIONS !== 'undefined') {
       populateFontSelect('content-heading-font', HEADING_FONT_OPTIONS, data.heading_font || 'Playfair Display');
       populateFontSelect('content-body-font', BODY_FONT_OPTIONS, data.body_font || 'Montserrat');
     }
+  } catch (err) { /* selects ficam vazios */ }
 
+  try {
     document.getElementById('content-pix-key').value = data.pix_key || '';
     document.getElementById('content-pix-merchant-name').value = data.pix_merchant_name || '';
     document.getElementById('content-pix-merchant-city').value = data.pix_merchant_city || '';
     document.getElementById('content-pix-intro-text').value = data.pix_intro_text || '';
+  } catch (err) { /* campos de pix ficam em branco */ }
+
+  try {
     document.getElementById('content-amount-warning-text').value = data.amount_warning_text || '';
-  } catch (err) {
-    // se falhar, os campos ficam em branco e a pessoa pode preencher/tentar de novo
-  }
+  } catch (err) { /* aviso fica em branco */ }
 }
 
 async function handleHeroBgFileChange(e) {
@@ -364,7 +386,9 @@ async function saveSiteContent() {
         hero_title: document.getElementById('content-hero-title').value.trim(),
         hero_lead: document.getElementById('content-hero-lead').value.trim(),
         hero_background_url: document.getElementById('hero-background-url').value.trim(),
-        hero_text_color: document.getElementById('content-hero-text-color').value,
+        hero_title_color: document.getElementById('content-hero-title-color').value,
+        hero_eyebrow_color: document.getElementById('content-hero-eyebrow-color').value,
+        hero_lead_color: document.getElementById('content-hero-lead-color').value,
         pillars_title: document.getElementById('content-pillars-title').value.trim(),
         pillars: pillarsState.filter((p) => (p.title || '').trim() || (p.text || '').trim()),
         heading_font: document.getElementById('content-heading-font').value,

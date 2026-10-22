@@ -24,22 +24,41 @@ function escapeHtml(str) {
 }
 
 async function loadSiteContent() {
+  let data;
   try {
     const res = await fetch('/.netlify/functions/site-content');
     if (!res.ok) return;
-    const data = await res.json();
+    data = await res.json();
     state.siteContent = data;
+  } catch (err) {
+    // se a requisicao falhar, a pagina mantem os textos padrao que ja estao no HTML
+    return;
+  }
 
+  // Cada bloco abaixo e isolado: se um campo novo der problema, os demais
+  // (incluindo titulo/texto/pilares, que ja existiam antes) continuam
+  // sendo aplicados normalmente.
+  try {
     if (data.hero_title) document.getElementById('hero-title').textContent = data.hero_title;
     if (data.hero_lead) document.getElementById('hero-lead').textContent = data.hero_lead;
-    applyHeroBackground(data.hero_background_url);
-    applyHeroTextColor(data.hero_text_color);
     renderPillars(data.pillars_title, data.pillars);
+  } catch (err) { /* titulo/texto/pilares seguem com o valor padrao do HTML */ }
 
+  try {
+    applyHeroBackground(data.hero_background_url);
+  } catch (err) { /* fundo segue a cor padrao */ }
+
+  try {
+    applyHeroTextColors(data.hero_title_color, data.hero_eyebrow_color, data.hero_lead_color);
+  } catch (err) { /* cores seguem o padrao do CSS */ }
+
+  try {
     if (typeof applySiteFonts === 'function') {
       applySiteFonts(data.heading_font, data.body_font);
     }
+  } catch (err) { /* fontes seguem o padrao do CSS */ }
 
+  try {
     if (data.pix_intro_text) document.getElementById('pix-intro-text').textContent = data.pix_intro_text;
     const pixKey = data.pix_key || 'belavista@igrejaunited.com';
     document.getElementById('pix-key-display').textContent = pixKey;
@@ -57,22 +76,29 @@ async function loadSiteContent() {
       renderPixQrCode('pix-qr-public', qrOpts);
       renderPixQrCode('pix-qr-modal', qrOpts);
     }
+  } catch (err) { /* chave Pix/QR seguem o valor padrao do HTML */ }
 
+  try {
     if (data.amount_warning_text) {
       document.getElementById('amount-warning-text').textContent = data.amount_warning_text;
     }
-  } catch (err) {
-    // se falhar, a pagina mantem os textos padrao que ja estao no HTML
-  }
+  } catch (err) { /* aviso segue o texto padrao do HTML */ }
 }
 
-// Cor do texto do topo (eyebrow, título e texto de introdução) — editável
-// pelo admin porque uma foto de fundo clara pode fazer o texto claro
-// padrão "sumir" por falta de contraste.
-function applyHeroTextColor(color) {
+// Cores do texto do topo (título, subtítulo/eyebrow e corpo de
+// introdução) — editáveis pelo admin porque uma foto de fundo clara pode
+// fazer o texto claro padrão "sumir" por falta de contraste. Cada uma é
+// independente, igual à escolha de fonte de título x corpo de texto.
+function applyHeroTextColors(titleColor, eyebrowColor, leadColor) {
   const hero = document.querySelector('.hero');
   if (!hero) return;
-  hero.style.color = color || '';
+  const setVar = (name, value) => {
+    if (value) hero.style.setProperty(name, value);
+    else hero.style.removeProperty(name);
+  };
+  setVar('--hero-title-color', titleColor);
+  setVar('--hero-eyebrow-color', eyebrowColor);
+  setVar('--hero-lead-color', leadColor);
 }
 
 function applyHeroBackground(url) {

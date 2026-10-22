@@ -22,7 +22,9 @@ exports.handler = async function (event) {
       hero_title: heroTitle,
       hero_lead: heroLead,
       hero_background_url: heroBackgroundUrl,
-      hero_text_color: heroTextColor,
+      hero_title_color: heroTitleColor,
+      hero_eyebrow_color: heroEyebrowColor,
+      hero_lead_color: heroLeadColor,
       pillars_title: pillarsTitle,
       pillars,
       heading_font: headingFont,
@@ -38,7 +40,9 @@ exports.handler = async function (event) {
     if (heroTitle !== undefined) updates.hero_title = heroTitle;
     if (heroLead !== undefined) updates.hero_lead = heroLead;
     if (heroBackgroundUrl !== undefined) updates.hero_background_url = heroBackgroundUrl;
-    if (heroTextColor !== undefined) updates.hero_text_color = heroTextColor;
+    if (heroTitleColor !== undefined) updates.hero_title_color = heroTitleColor;
+    if (heroEyebrowColor !== undefined) updates.hero_eyebrow_color = heroEyebrowColor;
+    if (heroLeadColor !== undefined) updates.hero_lead_color = heroLeadColor;
     if (pillarsTitle !== undefined) updates.pillars_title = pillarsTitle;
     if (pillars !== undefined) {
       if (!Array.isArray(pillars)) {

@@ -1,10 +1,16 @@
 -- Fase 6: campos editaveis adicionais para o painel admin ter controle
 -- total sobre a pagina publica, sem precisar editar codigo.
--- Rode isso uma vez no SQL Editor do Supabase, depois de ja ter rodado
--- schema.sql e content_and_storage.sql.
+-- Rode isso no SQL Editor do Supabase, depois de ja ter rodado
+-- schema.sql e content_and_storage.sql. Pode rodar este arquivo de novo
+-- (por cima) sem problema caso ja tenha rodado uma versao anterior dele -
+-- todos os comandos sao seguros para repetir (idempotentes).
 --
 -- Adiciona:
---   hero_background_url  -> foto de fundo da landing page (upload no admin)
+--   hero_background_url -> foto de fundo da landing page (upload no admin)
+--   hero_title_color / hero_eyebrow_color / hero_lead_color -> cor do
+--     titulo, do subtitulo ("igrejaunited | bela vista") e do texto de
+--     introducao do topo da pagina, de forma independente (igual a
+--     escolha de fonte de titulo x corpo de texto)
 --   heading_font/body_font -> fontes do Google Fonts usadas no site
 --   pix_key / pix_merchant_name / pix_merchant_city -> dados usados tanto
 --     no texto quanto no QR Code Pix (padrao BR Code / EMV do Banco Central)
@@ -13,7 +19,9 @@
 
 alter table site_content
   add column if not exists hero_background_url text,
-  add column if not exists hero_text_color text not null default '#f2ede8',
+  add column if not exists hero_title_color text not null default '#f2ede8',
+  add column if not exists hero_eyebrow_color text not null default '#b09080',
+  add column if not exists hero_lead_color text not null default '#f2ede8',
   add column if not exists heading_font text not null default 'Playfair Display',
   add column if not exists body_font text not null default 'Montserrat',
   add column if not exists pix_key text not null default 'belavista@igrejaunited.com',
@@ -22,12 +30,20 @@ alter table site_content
   add column if not exists pix_intro_text text not null default 'Escolha um item abaixo, registre sua oferta e finalize o pagamento com a chave Pix abaixo, direto no app do seu banco — ou aponte a câmera para o QR Code.',
   add column if not exists amount_warning_text text not null default 'É necessário adicionar R$ 0,11 à sua oferta para que possamos identificar que o pagamento é para o Projeto de Expansão. Ou seja: se quiser ofertar R$ 1,00, ofereça R$ 1,11.';
 
+-- Campo de uma versao anterior desta migracao (cor unica para todo o
+-- texto do topo), substituido pelos 3 campos separados acima. Remove se
+-- tiver sido criado; nao faz nada se nunca existiu.
+alter table site_content
+  drop column if exists hero_text_color;
+
 -- Garante que a linha singleton (id = 1) ja exista com os novos valores
 -- padrao, caso o insert original (em content_and_storage.sql) ja tenha
 -- sido executado antes desta migracao.
 update site_content
 set
-  hero_text_color = coalesce(hero_text_color, '#f2ede8'),
+  hero_title_color = coalesce(hero_title_color, '#f2ede8'),
+  hero_eyebrow_color = coalesce(hero_eyebrow_color, '#b09080'),
+  hero_lead_color = coalesce(hero_lead_color, '#f2ede8'),
   heading_font = coalesce(heading_font, 'Playfair Display'),
   body_font = coalesce(body_font, 'Montserrat'),
   pix_key = coalesce(pix_key, 'belavista@igrejaunited.com'),

@@ -49,9 +49,9 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-size: 12px;
-  opacity: 0.75;
+  opacity: 0.8;
   margin: 0 0 12px;
-  color: inherit;
+  color: var(--hero-eyebrow-color, var(--brand-dusty));
 }
 
 .hero h1 {
@@ -59,12 +59,13 @@ body {
   font-family: var(--font-heading);
   font-weight: 700;
   font-size: clamp(28px, 5vw, 42px);
+  color: var(--hero-title-color, var(--brand-offwhite));
 }
 
 .lead {
   max-width: 560px;
   margin: 0 auto;
-  color: inherit;
+  color: var(--hero-lead-color, var(--brand-offwhite));
   opacity: 0.9;
   line-height: 1.6;
 }

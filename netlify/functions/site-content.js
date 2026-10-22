@@ -1,7 +1,15 @@
 // Endpoint publico: GET /.netlify/functions/site-content
 // Retorna os textos e configuracoes editaveis da pagina publica (titulo,
-// texto de introducao, pilares, fundo da landing, fontes e dados do Pix) -
-// editados pelo administrador em admin-site-content.js.
+// texto de introducao, pilares, fundo da landing, cores, fontes e dados
+// do Pix) - editados pelo administrador em admin-site-content.js.
+//
+// Usamos select('*') (em vez de listar colunas) de proposito: se algum
+// dia uma migracao de SQL (sql/phase6_*.sql) ainda nao tiver rodado no
+// banco, um select com uma coluna nova inexistente quebraria a consulta
+// inteira e devolveria erro 500 - inclusive para os campos antigos que
+// ja funcionavam. Com '*' a consulta sempre funciona com o que existir
+// na tabela, e cada campo novo aqui embaixo ja tem um valor padrao via
+// "|| ''" / "|| 'valor'" caso ainda nao exista na coluna.
 const { getSupabase } = require('./_shared/supabase');
 
 exports.handler = async function () {
@@ -9,11 +17,7 @@ exports.handler = async function () {
     const supabase = getSupabase();
     const { data, error } = await supabase
       .from('site_content')
-      .select(
-        'hero_title, hero_lead, hero_background_url, hero_text_color, pillars_title, pillars, ' +
-        'heading_font, body_font, pix_key, pix_merchant_name, pix_merchant_city, ' +
-        'pix_intro_text, amount_warning_text'
-      )
+      .select('*')
       .eq('id', 1)
       .single();
     if (error) throw error;
@@ -25,7 +29,9 @@ exports.handler = async function () {
         hero_title: data.hero_title,
         hero_lead: data.hero_lead,
         hero_background_url: data.hero_background_url || '',
-        hero_text_color: data.hero_text_color || '#f2ede8',
+        hero_title_color: data.hero_title_color || '#f2ede8',
+        hero_eyebrow_color: data.hero_eyebrow_color || '#b09080',
+        hero_lead_color: data.hero_lead_color || '#f2ede8',
         pillars_title: data.pillars_title,
         pillars: data.pillars || [],
         heading_font: data.heading_font || 'Playfair Display',
