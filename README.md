@@ -50,7 +50,16 @@ padrão): `belavista@igrejaunited.com`.
   Code / EMV do Banco Central** — o mesmo formato que qualquer app de
   banco reconhece ao escanear. A biblioteca de geração do QR Code
   (`qrcode-generator`, MIT, de Kazuhiko Arase) está vendorizada localmente
-  em `public/js/vendor/qrcode.js`, sem depender de CDN.
+  em `public/js/vendor/qrcode.js`, sem depender de CDN. O QR Code da
+  seção pública (antes de escolher um item) não trava valor nenhum; já o
+  QR Code que aparece na tela de sucesso, depois que a pessoa registra
+  uma oferta, já vem **com o valor exato daquela oferta embutido** (campo
+  "Transaction Amount" do padrão BR Code) — a maioria dos apps de banco
+  abre com o valor pré-preenchido, o que reduz bastante o risco de
+  alguém escanear e acabar pagando um valor diferente do que registrou no
+  site (alguns apps ainda permitem editar o valor antes de confirmar, por
+  isso a confirmação manual do administrador continua sendo o filtro
+  final).
 - **Efeito 3D dos pilares**: puramente visual (CSS + JS em
   `public/js/main.js`), sem nenhuma configuração — os cards inclinam
   suavemente acompanhando o mouse.
@@ -89,12 +98,14 @@ padrão): `belavista@igrejaunited.com`.
    `sql/content_and_storage.sql` e rode. Isso cria a tabela com os textos
    editáveis da página inicial (já com os pilares preenchidos) e o bucket
    `item-images` onde as fotos dos itens são guardadas.
-5. Rode também `sql/phase6_editable_branding.sql` (só uma vez) — adiciona
-   os campos novos de foto de fundo, fontes, Pix (chave, nome e cidade do
-   recebedor) e o texto do aviso de valor na tabela `site_content`. Se
-   você já tinha rodado esse app antes da Fase 6, é só rodar este arquivo
-   a mais; não precisa refazer os passos anteriores.
-6. Em **Project Settings > API**, copie:
+5. Rode também `sql/phase6_editable_branding.sql` — adiciona os campos de
+   foto de fundo, cores do texto do topo, fontes, Pix (chave, nome e
+   cidade do recebedor) e o texto do aviso de valor na tabela
+   `site_content`. Seguro rodar de novo por cima se já tiver rodado antes.
+6. Rode também `sql/phase6b_suggested_amounts.sql` — adiciona o campo dos
+   valores sugeridos (botões de atalho) no formulário de oferta. Também
+   seguro rodar de novo.
+7. Em **Project Settings > API**, copie:
    - `Project URL` → variável `SUPABASE_URL`
    - `service_role` key (não é a `anon` key!) → variável
      `SUPABASE_SERVICE_ROLE_KEY`
@@ -150,9 +161,14 @@ o DNS do domínio para o Netlify).
 6. Ainda nessa seção, envie uma foto de fundo, troque as fontes e/ou
    edite a chave Pix, nome e cidade do recebedor — salve e recarregue a
    página pública para ver o fundo, as fontes e o novo QR Code do Pix.
-7. Abra a página pública num celular e escaneie o QR Code do Pix com o
-   app do seu banco, só para confirmar que ele reconhece a chave
-   corretamente antes de divulgar para a congregação.
+7. Abra a página pública num celular e escaneie o QR Code do Pix (o da
+   seção pública, sem valor) com o app do seu banco, só para confirmar
+   que ele reconhece a chave corretamente antes de divulgar para a
+   congregação.
+8. Registre uma oferta de teste escolhendo um dos "Valores sugeridos" e,
+   na tela de sucesso, escaneie o QR Code com o app do banco — confirme
+   que o valor já aparece preenchido (o texto abaixo do QR Code confirma
+   qual valor foi embutido).
 
 ## Rotina do administrador (confirmar ofertas)
 
@@ -192,6 +208,10 @@ Tudo isso é feito pelo painel `/admin`, sem precisar mexer em código:
   respectivamente) e o texto de introdução da seção de Pix. A página
   pública e a tela de sucesso da oferta atualizam a chave, o texto e o QR
   Code automaticamente.
+- **Valores sugeridos**: no bloco "Valores sugeridos", edite os valores
+  que aparecem como botões de atalho no formulário de oferta (ex: `25,11;
+  50,11; 100,11; 250,11`) — use vírgula para os centavos e ponto e
+  vírgula (`;`) para separar cada valor.
 - **Aviso sobre o valor da oferta**: edite o texto do aviso "Muito
   Importante" que aparece acima do campo de valor no formulário de oferta
   (por padrão, pede para somar R$ 0,11 ao valor pretendido).
@@ -235,7 +255,8 @@ sql/
   schema.sql                     → cria as tabelas items/contributions no Supabase
   seed.sql                       → (opcional) já cadastra os 2 itens atuais
   content_and_storage.sql        → cria a tabela site_content + o bucket item-images
-  phase6_editable_branding.sql   → adiciona os campos de fundo/fontes/Pix/aviso
+  phase6_editable_branding.sql   → adiciona os campos de fundo/cores/fontes/Pix/aviso
+  phase6b_suggested_amounts.sql  → adiciona o campo dos valores sugeridos
 ```
 
 ## Segurança

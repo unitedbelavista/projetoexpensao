@@ -193,7 +193,9 @@ function openModal(itemId) {
   submitBtn.disabled = false;
   submitBtn.textContent = 'Registrar oferta e pagar via Pix';
 
-  const chipValues = [25.11, 50.11, 100.11, 250.11];
+  const chipValues = (state.siteContent && Array.isArray(state.siteContent.suggested_amounts) && state.siteContent.suggested_amounts.length)
+    ? state.siteContent.suggested_amounts
+    : [25.11, 50.11, 100.11, 250.11];
   const chipRow = document.getElementById('chip-row');
   chipRow.innerHTML = chipValues
     .map((v) => `<span class="chip" data-value="${v.toFixed(2)}">R$ ${v.toFixed(2).replace('.', ',')}</span>`)
@@ -214,10 +216,33 @@ function closeModal() {
   state.selectedItem = null;
 }
 
-function showSuccessView() {
+// "amount" é o valor exato que a pessoa registrou nessa oferta — o QR
+// Code da tela de sucesso é gerado já com esse valor embutido (campo 54
+// do BR Code), para reduzir o risco de alguém escanear e o banco permitir
+// digitar um valor diferente do que foi registrado no site.
+function showSuccessView(amount) {
   document.getElementById('modal-form-view').hidden = true;
   document.getElementById('modal-success-view').hidden = false;
   document.getElementById('copy-feedback').hidden = true;
+
+  const hint = document.getElementById('modal-qr-amount-hint');
+  if (typeof renderPixQrCode === 'function' && state.siteContent) {
+    const pixKey = state.siteContent.pix_key || 'belavista@igrejaunited.com';
+    const rendered = renderPixQrCode('pix-qr-modal', {
+      key: pixKey,
+      merchantName: state.siteContent.pix_merchant_name,
+      merchantCity: state.siteContent.pix_merchant_city,
+      amount,
+    });
+    if (rendered && amount) {
+      hint.textContent = `Este QR Code já vem com o valor ${currency(amount)} preenchido — confira no app do seu banco antes de confirmar.`;
+      hint.hidden = false;
+    } else {
+      hint.hidden = true;
+    }
+  } else if (hint) {
+    hint.hidden = true;
+  }
 }
 
 async function copyPixKey() {
@@ -262,7 +287,7 @@ async function submitOffer() {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Erro ao registrar oferta.');
-    showSuccessView();
+    showSuccessView(amount);
   } catch (err) {
     errorEl.textContent = err.message || 'Não foi possível registrar a oferta. Tente novamente.';
     errorEl.hidden = false;

@@ -27,6 +27,7 @@ exports.handler = async function (event) {
       hero_lead_color: heroLeadColor,
       pillars_title: pillarsTitle,
       pillars,
+      suggested_amounts: suggestedAmounts,
       heading_font: headingFont,
       body_font: bodyFont,
       pix_key: pixKey,
@@ -49,6 +50,19 @@ exports.handler = async function (event) {
         return { statusCode: 400, body: JSON.stringify({ error: 'pillars deve ser uma lista.' }) };
       }
       updates.pillars = pillars;
+    }
+    if (suggestedAmounts !== undefined) {
+      if (!Array.isArray(suggestedAmounts) || !suggestedAmounts.length) {
+        return { statusCode: 400, body: JSON.stringify({ error: 'Informe ao menos um valor sugerido valido.' }) };
+      }
+      const cleaned = suggestedAmounts
+        .map((v) => Number(v))
+        .filter((v) => Number.isFinite(v) && v > 0)
+        .map((v) => Math.round(v * 100) / 100);
+      if (!cleaned.length) {
+        return { statusCode: 400, body: JSON.stringify({ error: 'Informe ao menos um valor sugerido valido.' }) };
+      }
+      updates.suggested_amounts = cleaned;
     }
     if (headingFont !== undefined) updates.heading_font = headingFont;
     if (bodyFont !== undefined) updates.body_font = bodyFont;

@@ -12,6 +12,17 @@
 // "|| ''" / "|| 'valor'" caso ainda nao exista na coluna.
 const { getSupabase } = require('./_shared/supabase');
 
+const DEFAULT_SUGGESTED_AMOUNTS = [25.11, 50.11, 100.11, 250.11];
+
+function sanitizeSuggestedAmounts(value) {
+  if (!Array.isArray(value)) return DEFAULT_SUGGESTED_AMOUNTS;
+  const cleaned = value
+    .map((v) => Number(v))
+    .filter((v) => Number.isFinite(v) && v > 0)
+    .map((v) => Math.round(v * 100) / 100);
+  return cleaned.length ? cleaned : DEFAULT_SUGGESTED_AMOUNTS;
+}
+
 exports.handler = async function () {
   try {
     const supabase = getSupabase();
@@ -34,6 +45,7 @@ exports.handler = async function () {
         hero_lead_color: data.hero_lead_color || '#f2ede8',
         pillars_title: data.pillars_title,
         pillars: data.pillars || [],
+        suggested_amounts: sanitizeSuggestedAmounts(data.suggested_amounts),
         heading_font: data.heading_font || 'Playfair Display',
         body_font: data.body_font || 'Montserrat',
         pix_key: data.pix_key || '',

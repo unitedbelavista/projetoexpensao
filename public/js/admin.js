@@ -308,8 +308,32 @@ async function loadSiteContent() {
   } catch (err) { /* campos de pix ficam em branco */ }
 
   try {
+    document.getElementById('content-suggested-amounts').value = formatSuggestedAmounts(data.suggested_amounts);
+  } catch (err) { /* campo de valores sugeridos fica em branco */ }
+
+  try {
     document.getElementById('content-amount-warning-text').value = data.amount_warning_text || '';
   } catch (err) { /* aviso fica em branco */ }
+}
+
+// "[25.11, 50.11]" -> "25,11; 50,11" (formato que a pessoa ve/edita no campo)
+function formatSuggestedAmounts(values) {
+  if (!Array.isArray(values) || !values.length) return '25,11; 50,11; 100,11; 250,11';
+  return values.map((v) => Number(v).toFixed(2).replace('.', ',')).join('; ');
+}
+
+// "25,11; 50,11" -> [25.11, 50.11] (formato que o backend guarda).
+// Aceita tanto ";" quanto "," como separador entre valores, desde que o
+// valor em si use virgula para os centavos (ex: "25,11; 50,11" ou, se a
+// pessoa so digitar um valor por vez sem ponto-e-virgula, ainda funciona).
+function parseSuggestedAmounts(text) {
+  return String(text || '')
+    .split(';')
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => Number(part.replace(/\./g, '').replace(',', '.')))
+    .filter((n) => Number.isFinite(n) && n > 0)
+    .map((n) => Math.round(n * 100) / 100);
 }
 
 async function handleHeroBgFileChange(e) {
@@ -378,6 +402,14 @@ async function saveSiteContent() {
   const feedbackEl = document.getElementById('content-save-feedback');
   errorEl.hidden = true;
   feedbackEl.hidden = true;
+
+  const suggestedAmounts = parseSuggestedAmounts(document.getElementById('content-suggested-amounts').value);
+  if (!suggestedAmounts.length) {
+    errorEl.textContent = 'Informe ao menos um valor sugerido válido (ex: 25,11; 50,11).';
+    errorEl.hidden = false;
+    return;
+  }
+
   try {
     const res = await fetch('/.netlify/functions/admin-site-content', {
       method: 'PUT',
@@ -391,6 +423,7 @@ async function saveSiteContent() {
         hero_lead_color: document.getElementById('content-hero-lead-color').value,
         pillars_title: document.getElementById('content-pillars-title').value.trim(),
         pillars: pillarsState.filter((p) => (p.title || '').trim() || (p.text || '').trim()),
+        suggested_amounts: suggestedAmounts,
         heading_font: document.getElementById('content-heading-font').value,
         body_font: document.getElementById('content-body-font').value,
         pix_key: document.getElementById('content-pix-key').value.trim(),

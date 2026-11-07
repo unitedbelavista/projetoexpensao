@@ -133,6 +133,11 @@ main {
   margin: 14px auto 6px;
 }
 
+.modal-qr-amount-hint {
+  text-align: center;
+  margin: 0 0 16px;
+}
+
 .pillars { margin-bottom: 28px; }
 
 .pillars h2 {
