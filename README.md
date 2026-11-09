@@ -10,10 +10,11 @@ gambiarra. Duas partes:
    Pix**, direto pelo app do banco.
 2. **Painel administrativo** (`/admin`): login com senha única
    compartilhada; permite editar **tudo** da página inicial sem precisar de
-   código — textos, foto de fundo, fontes, pilares, chave Pix (com QR
-   Code), aviso de valor e itens (com upload de foto) — confirma
-   manualmente as ofertas depois que o Pix cair na conta da igreja, e
-   mostra o total arrecadado/pendente/faltante por item e no geral.
+   código — textos, foto de fundo, cores, fontes, pilares, chave Pix (com QR
+   Code), aviso de valor e itens (com upload de foto) — confirma ou
+   rejeita manualmente as ofertas depois que o Pix cair na conta da
+   igreja (ação reversível a qualquer momento), e mostra o total
+   arrecadado/em análise/faltante por item e no geral.
 
 Chave Pix oficial da igreja (editável no painel admin, já configurada como
 padrão): `belavista@igrejaunited.com`.
@@ -64,13 +65,21 @@ padrão): `belavista@igrejaunited.com`.
   `public/js/main.js`), sem nenhuma configuração — os cards inclinam
   suavemente acompanhando o mouse.
 - **Pagamentos**: **Pix manual, sem gateway de pagamento**. Quando alguém
-  clica em "Ofertar", o app só registra a intenção de oferta como
-  "pendente" no banco e mostra a chave Pix da igreja para a pessoa copiar e
-  pagar direto pelo app do banco dela. Como não existe integração com
-  banco/gateway nenhum, ninguém confirma o pagamento automaticamente — é o
-  **administrador que confere o Pix na conta da igreja e confirma a oferta
-  no painel** (botão "Confirmar recebimento"). Só depois dessa confirmação
-  o valor entra no total arrecadado do item.
+  clica em "Ofertar", o app registra a oferta e mostra a chave Pix da
+  igreja para a pessoa copiar e pagar direto pelo app do banco dela. Como
+  não existe integração com banco/gateway nenhum, ninguém confirma o
+  pagamento automaticamente — é o **administrador que confere o Pix na
+  conta da igreja e confirma ou rejeita a oferta no painel**. O valor de
+  toda oferta registrada **já entra no total arrecadado imediatamente**,
+  aparecendo como "Em análise" no painel até o administrador confirmar
+  (vira "Confirmada") ou rejeitar (sai do total arrecadado). Essa decisão
+  pode ser revertida depois a qualquer momento, clicando em "Confirmar
+  recebimento" ou "Rejeitar" de novo na mesma oferta.
+- **Nome de quem oferta**: por padrão é obrigatório preencher o nome para
+  registrar uma oferta (a página mostra um aviso de que o dado é usado só
+  para identificar a oferta internamente e não é divulgado). Isso é
+  controlado pelo toggle "Exigir nome de quem está ofertando" no painel —
+  se desativado, o campo volta a ser opcional.
 
 > **Por que não usar um gateway de pagamento (Mercado Pago, etc.)?** A
 > igreja decidiu não abrir conta em gateway nenhum por enquanto, então o
@@ -108,7 +117,12 @@ padrão): `belavista@igrejaunited.com`.
 7. Rode também `sql/phase6d_background_color.sql` — adiciona o campo da
    cor de fundo de todo o site (separado da cor/foto do cabeçalho).
    Também seguro rodar de novo.
-8. Em **Project Settings > API**, copie:
+8. Rode também `sql/phase6e_require_payer_name.sql` — adiciona o campo do
+   toggle "Exigir nome de quem está ofertando". Também seguro rodar de
+   novo. Não precisa de nenhuma migração para a mudança de como as ofertas
+   contam no arrecadado — isso é só lógica nova nas functions, não muda a
+   tabela `contributions`.
+9. Em **Project Settings > API**, copie:
    - `Project URL` → variável `SUPABASE_URL`
    - `service_role` key (não é a `anon` key!) → variável
      `SUPABASE_SERVICE_ROLE_KEY`
@@ -172,22 +186,39 @@ o DNS do domínio para o Netlify).
    na tela de sucesso, escaneie o QR Code com o app do banco — confirme
    que o valor já aparece preenchido (o texto abaixo do QR Code confirma
    qual valor foi embutido).
+9. Confirme que o campo "Seu nome" bloqueia o envio se ficar vazio
+   (com o toggle "Exigir nome de quem está ofertando" ativado no painel).
+   Registre essa oferta de teste e veja que o valor já aparece somado no
+   progresso do item e nos totais do painel **antes** de qualquer
+   confirmação — com status "Em análise" na tabela "Últimas ofertas".
+10. No painel, clique em "Rejeitar" nessa oferta de teste e confirme que o
+    valor some do arrecadado (página pública e painel). Depois clique em
+    "Confirmar recebimento" na mesma oferta (ela estava rejeitada) e
+    confirme que o valor volta a somar — isso testa que a decisão é
+    reversível nos dois sentidos.
 
 ## Rotina do administrador (confirmar ofertas)
 
-Sempre que alguém registrar uma oferta no site, ela aparece em `/admin`
-com status **pending**. O fluxo esperado é:
+Sempre que alguém registrar uma oferta no site, ela já entra no valor
+arrecadado (página pública e painel) imediatamente, e aparece em `/admin`
+com status **"Em análise"**. O fluxo esperado é:
 
 1. Verificar os Pix recebidos na conta do banco da igreja.
-2. Para cada Pix que bater com uma oferta pendente (mesmo valor,
+2. Para cada Pix que bater com uma oferta "Em análise" (mesmo valor,
    aproximadamente na mesma data), clicar em **"Confirmar recebimento"**
-   ao lado dela na tabela "Últimas ofertas".
-3. Se uma oferta pendente nunca for paga (a pessoa desistiu, por exemplo),
-   pode clicar em **"Rejeitar"** para tirá-la da lista de pendências —
-   isso não conta nem como arrecadado nem como pendente.
+   ao lado dela na tabela "Últimas ofertas" — ela passa para
+   **"Confirmada"** (continua contando no arrecadado).
+3. Se uma oferta "Em análise" nunca for paga (a pessoa desistiu, por
+   exemplo), clicar em **"Rejeitar"** — ela passa para **"Rejeitada"** e
+   **sai** do valor arrecadado.
+4. Qualquer uma dessas decisões pode ser revertida depois: clicar em
+   "Confirmar recebimento" numa oferta rejeitada por engano traz o valor
+   de volta ao arrecadado; clicar em "Rejeitar" numa oferta já confirmada
+   a retira de novo.
 
-Só ofertas com status **approved** entram no valor arrecadado mostrado na
-página pública e nos totais do painel.
+Resumindo: toda oferta conta no arrecadado, **exceto** as marcadas como
+"Rejeitada". "Em análise" e "Confirmada" contam igual — a diferença é só
+que "Confirmada" já foi conferida pelo administrador.
 
 ## Editar o texto, as fontes, o fundo e as fotos
 
@@ -223,6 +254,11 @@ Tudo isso é feito pelo painel `/admin`, sem precisar mexer em código:
 - **Aviso sobre o valor da oferta**: edite o texto do aviso "Muito
   Importante" que aparece acima do campo de valor no formulário de oferta
   (por padrão, pede para somar R$ 0,11 ao valor pretendido).
+- **Exigir nome de quem está ofertando**: toggle no bloco "Formulário de
+  oferta". Ativado (padrão), a pessoa precisa preencher o nome para
+  registrar a oferta — a página já mostra um aviso explicando que o dado é
+  usado só para identificar a oferta e não é divulgado. Desativado, o
+  campo de nome volta a ser opcional.
 - Depois de qualquer alteração acima, clique em "Salvar conteúdo" para
   publicar — a mudança aparece na hora na página pública (é só
   recarregar).
@@ -267,6 +303,7 @@ sql/
   phase6b_suggested_amounts.sql  → adiciona o campo dos valores sugeridos
   phase6c_fix_missing_colors.sql → corrige as 3 colunas de cor do hero, caso tenham sido apagadas por engano
   phase6d_background_color.sql   → adiciona o campo da cor de fundo de todo o site
+  phase6e_require_payer_name.sql → adiciona o campo do toggle "Exigir nome de quem está ofertando"
 ```
 
 ## Segurança

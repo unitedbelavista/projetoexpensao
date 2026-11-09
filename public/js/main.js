@@ -1,4 +1,4 @@
-const state = { items: [], selectedItem: null, siteContent: null };
+const state = { items: [], selectedItem: null, siteContent: null, requirePayerName: true };
 
 function currency(value) {
   return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -57,6 +57,10 @@ async function loadSiteContent() {
   } catch (err) { /* fundo do site segue o padrao do CSS */ }
 
   try {
+    applyRequirePayerName(data.require_payer_name);
+  } catch (err) { /* nome continua obrigatorio por padrao (valor inicial do state) */ }
+
+  try {
     if (typeof applySiteFonts === 'function') {
       applySiteFonts(data.heading_font, data.body_font);
     }
@@ -112,6 +116,19 @@ function applyHeroTextColors(titleColor, eyebrowColor, leadColor) {
 function applySiteBackgroundColor(color) {
   if (color) document.documentElement.style.setProperty('--bg', color);
   else document.documentElement.style.removeProperty('--bg');
+}
+
+// Controla se o campo "Seu nome" no formulario de oferta e obrigatorio -
+// configuravel pelo toggle "Exigir nome de quem esta ofertando" no painel
+// admin. Atualiza o atributo "required" nativo do input e o texto do
+// label, e state.requirePayerName e checado de novo em submitOffer() como
+// validacao extra (o servidor tambem valida, em register-offer.js).
+function applyRequirePayerName(required) {
+  state.requirePayerName = required !== false;
+  const input = document.getElementById('modal-name');
+  const label = document.getElementById('modal-name-label');
+  if (input) input.required = state.requirePayerName;
+  if (label) label.textContent = state.requirePayerName ? 'Seu nome' : 'Seu nome (opcional)';
 }
 
 function applyHeroBackground(url) {
@@ -280,6 +297,12 @@ async function submitOffer() {
   const amount = Number(amountInput.value);
   if (!amount || amount < 5) {
     errorEl.textContent = 'Informe um valor válido (mínimo R$ 5,00).';
+    errorEl.hidden = false;
+    return;
+  }
+
+  if (state.requirePayerName && !nameInput.value.trim()) {
+    errorEl.textContent = 'Por favor, informe seu nome para registrar a oferta.';
     errorEl.hidden = false;
     return;
   }

@@ -78,7 +78,7 @@ function renderTotals(totals) {
   const cards = [
     ['Meta total', totals.target],
     ['Arrecadado', totals.raised],
-    ['Pendente', totals.pending],
+    ['Em análise', totals.in_review],
     ['Ainda falta', totals.remaining],
   ];
   row.innerHTML = cards.map(([label, value]) => `
@@ -98,7 +98,7 @@ function renderItemsTable() {
   container.innerHTML = `
     <table class="data-table">
       <thead>
-        <tr><th>Item</th><th>Meta</th><th>Arrecadado</th><th>Pendente</th><th>Status</th><th></th></tr>
+        <tr><th>Item</th><th>Meta</th><th>Arrecadado</th><th>Em análise</th><th>Status</th><th></th></tr>
       </thead>
       <tbody>
         ${state.items.map((item) => `
@@ -106,7 +106,7 @@ function renderItemsTable() {
             <td>${item.name}</td>
             <td>${currency(item.target_amount)}</td>
             <td>${currency(item.raised_amount)}</td>
-            <td>${currency(item.pending_amount)}</td>
+            <td>${currency(item.in_review_amount)}</td>
             <td>${item.active ? 'Ativo' : 'Oculto'}</td>
             <td><button class="link-btn" data-edit="${item.id}">Editar</button></td>
           </tr>
@@ -117,6 +117,16 @@ function renderItemsTable() {
   container.querySelectorAll('button[data-edit]').forEach((btn) => {
     btn.addEventListener('click', () => openItemModal(btn.dataset.edit));
   });
+}
+
+// "pending"/"in_process" (ou qualquer status futuro que nao seja
+// aprovado/rejeitado) e toda oferta nova - ela ja conta no arrecadado,
+// mas ainda nao foi conferida pelo admin, por isso aparece como
+// "Em análise" em vez do nome tecnico do status.
+function statusLabel(status) {
+  if (status === 'approved') return 'Confirmada';
+  if (status === 'rejected' || status === 'cancelled') return 'Rejeitada';
+  return 'Em análise';
 }
 
 function renderContributionsTable() {
@@ -138,12 +148,10 @@ function renderContributionsTable() {
             <td>${itemNameById[c.item_id] || '—'}</td>
             <td>${c.payer_name || '—'}</td>
             <td>${currency(c.amount)}</td>
-            <td><span class="status-pill status-${c.status}">${c.status}</span></td>
+            <td><span class="status-pill status-${c.status}">${statusLabel(c.status)}</span></td>
             <td>
-              ${c.status === 'pending' ? `
-                <button class="link-btn" data-approve="${c.id}">Confirmar recebimento</button>
-                <button class="link-btn link-btn-danger" data-reject="${c.id}">Rejeitar</button>
-              ` : '—'}
+              <button class="link-btn" data-approve="${c.id}" ${c.status === 'approved' ? 'disabled' : ''}>Confirmar recebimento</button>
+              <button class="link-btn link-btn-danger" data-reject="${c.id}" ${c.status === 'rejected' ? 'disabled' : ''}>Rejeitar</button>
             </td>
           </tr>
         `).join('')}
@@ -158,9 +166,12 @@ function renderContributionsTable() {
   });
 }
 
+// Confirmar ou rejeitar aqui pode ser feito a qualquer momento, inclusive
+// para reverter uma decisao anterior (ex: rejeitou por engano -> clica em
+// "Confirmar recebimento" de novo e a oferta volta a contar no arrecadado).
 async function updateContributionStatus(id, status) {
   const label = status === 'approved' ? 'confirmar o recebimento desta oferta' : 'rejeitar esta oferta';
-  if (!window.confirm(`Tem certeza que deseja ${label}? Confira antes se o Pix caiu mesmo na conta da igreja.`)) return;
+  if (!window.confirm(`Tem certeza que deseja ${label}? Confira antes se o Pix caiu mesmo na conta da igreja. Essa ação pode ser revertida depois, clicando em "Confirmar"/"Rejeitar" novamente.`)) return;
   try {
     const res = await fetch('/.netlify/functions/admin-contributions', {
       method: 'PUT',
@@ -339,6 +350,10 @@ async function loadSiteContent() {
   try {
     document.getElementById('content-amount-warning-text').value = data.amount_warning_text || '';
   } catch (err) { /* aviso fica em branco */ }
+
+  try {
+    document.getElementById('content-require-payer-name').checked = data.require_payer_name !== false;
+  } catch (err) { /* toggle fica no padrao (marcado) do HTML */ }
 }
 
 // "[25.11, 50.11]" -> "25,11; 50,11" (formato que a pessoa ve/edita no campo)
@@ -458,6 +473,7 @@ async function saveSiteContent() {
         pix_merchant_city: document.getElementById('content-pix-merchant-city').value.trim(),
         pix_intro_text: document.getElementById('content-pix-intro-text').value.trim(),
         amount_warning_text: document.getElementById('content-amount-warning-text').value.trim(),
+        require_payer_name: document.getElementById('content-require-payer-name').checked,
       }),
     });
     const data = await res.json();

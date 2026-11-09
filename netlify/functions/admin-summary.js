@@ -1,5 +1,11 @@
 // Dashboard protegido: totais + lista de ofertas recentes
 // GET /.netlify/functions/admin-summary
+//
+// Regra de contagem (igual à da página pública, em items.js): toda oferta
+// que não está "rejected" conta no valor arrecadado - inclusive as que
+// ainda estão "em análise" (status "pending", default de toda oferta
+// nova). "in_review" abaixo é só a fatia informativa de quanto desse
+// arrecadado ainda não foi confirmado pelo admin.
 const { getSupabase } = require('./_shared/supabase');
 const { isAuthenticated } = require('./_shared/auth');
 
@@ -29,12 +35,12 @@ exports.handler = async function (event) {
         ...item,
         target_amount: Number(item.target_amount),
         raised_amount: 0,
-        pending_amount: 0,
+        in_review_amount: 0,
       };
     });
 
     let totalRaised = 0;
-    let totalPending = 0;
+    let totalInReview = 0;
     let totalTarget = 0;
 
     (items || []).forEach((item) => {
@@ -44,12 +50,17 @@ exports.handler = async function (event) {
     (contributions || []).forEach((c) => {
       const bucket = byItem[c.item_id];
       const amount = Number(c.amount);
-      if (c.status === 'approved') {
-        if (bucket) bucket.raised_amount += amount;
-        totalRaised += amount;
-      } else if (c.status === 'pending' || c.status === 'in_process') {
-        if (bucket) bucket.pending_amount += amount;
-        totalPending += amount;
+      if (c.status === 'rejected' || c.status === 'cancelled') return;
+
+      // approved + pending/in_process (ou qualquer status futuro que nao
+      // seja rejeitado) contam no arrecadado - a oferta soma assim que e
+      // registrada, nao so depois de confirmada.
+      if (bucket) bucket.raised_amount += amount;
+      totalRaised += amount;
+
+      if (c.status !== 'approved') {
+        if (bucket) bucket.in_review_amount += amount;
+        totalInReview += amount;
       }
     });
 
@@ -62,7 +73,7 @@ exports.handler = async function (event) {
         totals: {
           target: Number(totalTarget.toFixed(2)),
           raised: Number(totalRaised.toFixed(2)),
-          pending: Number(totalPending.toFixed(2)),
+          in_review: Number(totalInReview.toFixed(2)),
           remaining: Number((totalTarget - totalRaised).toFixed(2)),
         },
       }),

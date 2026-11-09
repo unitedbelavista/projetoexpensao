@@ -1,5 +1,8 @@
 // Endpoint publico: GET /.netlify/functions/items
-// Retorna os itens ativos com o valor ja arrecadado (somente ofertas aprovadas).
+// Retorna os itens ativos com o valor ja arrecadado. Toda oferta registrada
+// entra na soma imediatamente (mesmo "em análise" / pending) - só uma
+// oferta "rejected" (rejeitada pelo admin) sai da soma. Ver register-offer.js
+// e admin-contributions.js.
 const { getSupabase } = require('./_shared/supabase');
 
 exports.handler = async function () {
@@ -17,13 +20,13 @@ exports.handler = async function () {
 
     const { data: contributions, error: contribError } = await supabase
       .from('contributions')
-      .select('item_id, amount')
-      .eq('status', 'approved');
+      .select('item_id, amount, status');
 
     if (contribError) throw contribError;
 
     const raisedByItem = {};
     (contributions || []).forEach((c) => {
+      if (c.status === 'rejected' || c.status === 'cancelled') return;
       raisedByItem[c.item_id] = (raisedByItem[c.item_id] || 0) + Number(c.amount);
     });
 

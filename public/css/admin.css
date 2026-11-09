@@ -193,6 +193,64 @@ table.data-table th { background: var(--brand-offwhite); font-size: 12px; text-t
 
 .link-btn-danger { color: #a03d2b; margin-left: 12px; }
 
+.link-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Toggle ("interruptor") usado no campo "Exigir nome de quem está
+   ofertando" - visualmente mais claro do que um checkbox simples para
+   indicar um estado ativado/desativado. */
+.admin-section label.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 42px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--brand-cream);
+  border-radius: 999px;
+  transition: background 0.2s ease;
+}
+
+.toggle-slider::before {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  left: 3px;
+  top: 3px;
+  background: var(--brand-white);
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 3px rgba(61, 43, 31, 0.3);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background: var(--success);
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(18px);
+}
+
 .status-pill {
   padding: 3px 10px;
   border-radius: 999px;

@@ -1,5 +1,9 @@
 // Protegido: confirmar/rejeitar/excluir uma oferta manualmente, depois que
-// o administrador conferir o Pix na conta do banco da igreja.
+// o administrador conferir o Pix na conta do banco da igreja. Toda oferta
+// nova já conta no arrecadado como "em análise" (status "pending") - só
+// vira "approved" (confirmada) ou "rejected" (sai do arrecadado) quando o
+// admin decide aqui. Essa decisão pode ser revertida a qualquer momento,
+// bastando chamar de novo com o outro status.
 // PUT    /.netlify/functions/admin-contributions   { id, status }
 // DELETE /.netlify/functions/admin-contributions?id=...
 const { getSupabase } = require('./_shared/supabase');

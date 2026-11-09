@@ -44,6 +44,7 @@ exports.handler = async function () {
         hero_eyebrow_color: data.hero_eyebrow_color || '#b09080',
         hero_lead_color: data.hero_lead_color || '#f2ede8',
         site_background_color: data.site_background_color || '#f2ede8',
+        require_payer_name: data.require_payer_name === undefined || data.require_payer_name === null ? true : !!data.require_payer_name,
         pillars_title: data.pillars_title,
         pillars: data.pillars || [],
         suggested_amounts: sanitizeSuggestedAmounts(data.suggested_amounts),
