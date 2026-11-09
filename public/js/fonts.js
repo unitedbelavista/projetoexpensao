@@ -4,6 +4,14 @@
 // Usado tanto em public/index.html (main.js) quanto em public/admin.html
 // (admin.js).
 
+// "Helvetica" nao existe no Google Fonts (e uma fonte do sistema/Apple),
+// entao ela e marcada com googleFont:false para nao tentar carregar um
+// <link> que nao existe, e usa "stack" com a pilha de fallback padrao do
+// mercado (Helvetica Neue -> Helvetica -> Arial -> sans-serif), que cobre
+// Mac/iOS (tem Helvetica Neue nativa) e Windows/Android (cai no Arial,
+// visualmente quase identico).
+var HELVETICA_OPTION = { name: 'Helvetica', fallback: 'sans-serif', googleFont: false, stack: '"Helvetica Neue", Helvetica, Arial, sans-serif' };
+
 var HEADING_FONT_OPTIONS = [
   { name: 'Playfair Display', fallback: 'serif' },
   { name: 'Merriweather', fallback: 'serif' },
@@ -15,6 +23,8 @@ var HEADING_FONT_OPTIONS = [
   { name: 'Abril Fatface', fallback: 'serif' },
   { name: 'Montserrat', fallback: 'sans-serif' },
   { name: 'Poppins', fallback: 'sans-serif' },
+  { name: 'Roboto', fallback: 'sans-serif' },
+  HELVETICA_OPTION,
 ];
 
 var BODY_FONT_OPTIONS = [
@@ -28,6 +38,7 @@ var BODY_FONT_OPTIONS = [
   { name: 'Work Sans', fallback: 'sans-serif' },
   { name: 'Playfair Display', fallback: 'serif' },
   { name: 'Merriweather', fallback: 'serif' },
+  HELVETICA_OPTION,
 ];
 
 var ALL_FONT_OPTIONS = HEADING_FONT_OPTIONS.concat(BODY_FONT_OPTIONS).reduce(function (acc, f) {
@@ -41,6 +52,7 @@ function findFontOption(fontName) {
 
 function fontFamilyValue(fontName, fallbackCategory) {
   var opt = findFontOption(fontName);
+  if (opt && opt.stack) return opt.stack;
   var fallback = fallbackCategory || (opt && opt.fallback) || 'sans-serif';
   return '"' + fontName + '", ' + fallback;
 }
@@ -48,9 +60,13 @@ function fontFamilyValue(fontName, fallbackCategory) {
 var _loadedGoogleFonts = {};
 
 // Injeta um <link> do Google Fonts para a fonte pedida (idempotente - só
-// injeta uma vez por nome de fonte).
+// injeta uma vez por nome de fonte). Fontes marcadas com googleFont:false
+// (ex: Helvetica) sao puladas, pois nao existem no Google Fonts - o
+// navegador usa a fonte do sistema diretamente via "stack".
 function loadGoogleFont(fontName) {
   if (!fontName || _loadedGoogleFonts[fontName]) return;
+  var opt = findFontOption(fontName);
+  if (opt && opt.googleFont === false) return;
   _loadedGoogleFonts[fontName] = true;
   var familyParam = fontName.replace(/ /g, '+') + ':wght@400;600;700';
   var link = document.createElement('link');

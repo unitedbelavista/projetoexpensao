@@ -2,9 +2,11 @@
 // publica (titulo, texto de introducao, pilares, fundo da landing,
 // fontes e dados do Pix).
 // PUT /.netlify/functions/admin-site-content
-// { hero_title, hero_lead, hero_background_url, pillars_title, pillars,
-//   heading_font, body_font, pix_key, pix_merchant_name, pix_merchant_city,
-//   pix_intro_text, amount_warning_text }
+// { hero_title, hero_lead, hero_background_url, hero_title_color,
+//   hero_eyebrow_color, hero_lead_color, site_background_color,
+//   pillars_title, pillars, suggested_amounts, heading_font, body_font,
+//   pix_key, pix_merchant_name, pix_merchant_city, pix_intro_text,
+//   amount_warning_text }
 const { getSupabase } = require('./_shared/supabase');
 const { isAuthenticated } = require('./_shared/auth');
 
@@ -25,6 +27,7 @@ exports.handler = async function (event) {
       hero_title_color: heroTitleColor,
       hero_eyebrow_color: heroEyebrowColor,
       hero_lead_color: heroLeadColor,
+      site_background_color: siteBackgroundColor,
       pillars_title: pillarsTitle,
       pillars,
       suggested_amounts: suggestedAmounts,
@@ -44,6 +47,7 @@ exports.handler = async function (event) {
     if (heroTitleColor !== undefined) updates.hero_title_color = heroTitleColor;
     if (heroEyebrowColor !== undefined) updates.hero_eyebrow_color = heroEyebrowColor;
     if (heroLeadColor !== undefined) updates.hero_lead_color = heroLeadColor;
+    if (siteBackgroundColor !== undefined) updates.site_background_color = siteBackgroundColor;
     if (pillarsTitle !== undefined) updates.pillars_title = pillarsTitle;
     if (pillars !== undefined) {
       if (!Array.isArray(pillars)) {

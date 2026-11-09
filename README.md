@@ -105,7 +105,10 @@ padrão): `belavista@igrejaunited.com`.
 6. Rode também `sql/phase6b_suggested_amounts.sql` — adiciona o campo dos
    valores sugeridos (botões de atalho) no formulário de oferta. Também
    seguro rodar de novo.
-7. Em **Project Settings > API**, copie:
+7. Rode também `sql/phase6d_background_color.sql` — adiciona o campo da
+   cor de fundo de todo o site (separado da cor/foto do cabeçalho).
+   Também seguro rodar de novo.
+8. Em **Project Settings > API**, copie:
    - `Project URL` → variável `SUPABASE_URL`
    - `service_role` key (não é a `anon` key!) → variável
      `SUPABASE_SERVICE_ROLE_KEY`
@@ -200,8 +203,13 @@ Tudo isso é feito pelo painel `/admin`, sem precisar mexer em código:
   foto de fundo".
 - **Fontes do site**: escolha a fonte dos títulos e a fonte do corpo de
   texto nos campos "Fonte dos títulos" / "Fonte do corpo de texto" — a
-  lista já vem com Playfair Display, Montserrat e outras opções do Google
-  Fonts. A troca vale tanto para a página pública quanto para o painel.
+  lista já vem com Playfair Display, Montserrat, Roboto, Helvetica e
+  outras opções (a Helvetica usa a fonte do sistema do visitante, já que
+  ela não existe no Google Fonts; as demais são carregadas do Google
+  Fonts). A troca vale tanto para a página pública quanto para o painel.
+- **Cor de fundo do site**: no campo "Cor de fundo do site", escolha a cor
+  de fundo de toda a página (atrás dos pilares, dos itens e do rodapé) —
+  é diferente da cor/foto do cabeçalho, que tem seu próprio campo acima.
 - **Chave Pix e QR Code**: no bloco "Pix", edite a chave Pix, o nome e a
   cidade do recebedor (esses dois últimos aparecem dentro do QR Code, por
   exigência do padrão do Banco Central — até 25 e 15 caracteres
@@ -257,6 +265,8 @@ sql/
   content_and_storage.sql        → cria a tabela site_content + o bucket item-images
   phase6_editable_branding.sql   → adiciona os campos de fundo/cores/fontes/Pix/aviso
   phase6b_suggested_amounts.sql  → adiciona o campo dos valores sugeridos
+  phase6c_fix_missing_colors.sql → corrige as 3 colunas de cor do hero, caso tenham sido apagadas por engano
+  phase6d_background_color.sql   → adiciona o campo da cor de fundo de todo o site
 ```
 
 ## Segurança

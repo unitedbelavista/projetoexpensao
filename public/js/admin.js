@@ -291,6 +291,7 @@ async function loadSiteContent() {
     document.getElementById('content-hero-title-color').value = data.hero_title_color || '#f2ede8';
     document.getElementById('content-hero-eyebrow-color').value = data.hero_eyebrow_color || '#b09080';
     document.getElementById('content-hero-lead-color').value = data.hero_lead_color || '#f2ede8';
+    document.getElementById('content-site-background-color').value = data.site_background_color || '#f2ede8';
   } catch (err) { /* cores ficam no padrao do input */ }
 
   try {
@@ -421,6 +422,7 @@ async function saveSiteContent() {
         hero_title_color: document.getElementById('content-hero-title-color').value,
         hero_eyebrow_color: document.getElementById('content-hero-eyebrow-color').value,
         hero_lead_color: document.getElementById('content-hero-lead-color').value,
+        site_background_color: document.getElementById('content-site-background-color').value,
         pillars_title: document.getElementById('content-pillars-title').value.trim(),
         pillars: pillarsState.filter((p) => (p.title || '').trim() || (p.text || '').trim()),
         suggested_amounts: suggestedAmounts,

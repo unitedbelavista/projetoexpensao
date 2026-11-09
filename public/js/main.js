@@ -53,6 +53,10 @@ async function loadSiteContent() {
   } catch (err) { /* cores seguem o padrao do CSS */ }
 
   try {
+    applySiteBackgroundColor(data.site_background_color);
+  } catch (err) { /* fundo do site segue o padrao do CSS */ }
+
+  try {
     if (typeof applySiteFonts === 'function') {
       applySiteFonts(data.heading_font, data.body_font);
     }
@@ -99,6 +103,15 @@ function applyHeroTextColors(titleColor, eyebrowColor, leadColor) {
   setVar('--hero-title-color', titleColor);
   setVar('--hero-eyebrow-color', eyebrowColor);
   setVar('--hero-lead-color', leadColor);
+}
+
+// Cor de fundo de todo o site (diferente da cor/foto do cabecalho "hero",
+// que e separada). Aplicada na raiz do documento para sobrescrever a
+// variavel --bg definida em style.css, afetando o corpo da pagina, a
+// area ao redor dos cards de pilares/itens e o rodape.
+function applySiteBackgroundColor(color) {
+  if (color) document.documentElement.style.setProperty('--bg', color);
+  else document.documentElement.style.removeProperty('--bg');
 }
 
 function applyHeroBackground(url) {

@@ -43,6 +43,7 @@ exports.handler = async function () {
         hero_title_color: data.hero_title_color || '#f2ede8',
         hero_eyebrow_color: data.hero_eyebrow_color || '#b09080',
         hero_lead_color: data.hero_lead_color || '#f2ede8',
+        site_background_color: data.site_background_color || '#f2ede8',
         pillars_title: data.pillars_title,
         pillars: data.pillars || [],
         suggested_amounts: sanitizeSuggestedAmounts(data.suggested_amounts),
