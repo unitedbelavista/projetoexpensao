@@ -237,6 +237,30 @@ async function handleImageFileChange(e) {
   }
 }
 
+// Notificação flutuante que aparece no canto da tela e some sozinha -
+// serve de feedback imediato ao salvar, já que o botão "Salvar conteúdo"
+// fica no topo da seção e a mensagem de texto fixa (content-save-feedback
+// / content-error) pode estar bem mais abaixo, fora da área visível.
+let _toastTimeoutId = null;
+function showToast(message, variant) {
+  const toast = document.getElementById('toast');
+  if (!toast) return;
+  clearTimeout(_toastTimeoutId);
+  toast.textContent = message;
+  toast.classList.toggle('toast-error', variant === 'error');
+  toast.hidden = false;
+  // pequeno delay para garantir que o navegador registre o estado
+  // "hidden" antes de adicionar "show" - assim a transição de entrada
+  // (fade/slide) sempre roda, mesmo em cliques repetidos rápidos.
+  setTimeout(() => {
+    toast.classList.add('show');
+  }, 0);
+  _toastTimeoutId = setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => { toast.hidden = true; }, 250);
+  }, 2600);
+}
+
 function populateFontSelect(selectId, options, selectedValue) {
   const select = document.getElementById(selectId);
   select.innerHTML = options.map((f) => `<option value="${f.name}">${f.name}</option>`).join('');
@@ -408,6 +432,7 @@ async function saveSiteContent() {
   if (!suggestedAmounts.length) {
     errorEl.textContent = 'Informe ao menos um valor sugerido válido (ex: 25,11; 50,11).';
     errorEl.hidden = false;
+    showToast(errorEl.textContent, 'error');
     return;
   }
 
@@ -438,9 +463,11 @@ async function saveSiteContent() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Erro ao salvar conteudo.');
     feedbackEl.hidden = false;
+    showToast('Conteúdo salvo!', 'success');
   } catch (err) {
     errorEl.textContent = err.message;
     errorEl.hidden = false;
+    showToast(err.message || 'Erro ao salvar conteúdo.', 'error');
   }
 }
 

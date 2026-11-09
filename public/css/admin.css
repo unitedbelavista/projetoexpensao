@@ -204,3 +204,34 @@ table.data-table th { background: var(--brand-offwhite); font-size: 12px; text-t
 .status-approved { background: #e8f0e2; color: #4a7a3d; }
 .status-pending, .status-in_process { background: #f3e6da; color: #8a5a2b; }
 .status-rejected, .status-cancelled { background: #fbeae6; color: #a03d2b; }
+
+/* Notificação flutuante ("toast") que aparece ao salvar, para dar
+   feedback imediato mesmo quando a pessoa clicou em "Salvar conteúdo"
+   no topo da seção e a mensagem de texto fixa (bem mais abaixo) estaria
+   fora da tela. Some sozinha depois de alguns segundos. */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translate(-50%, 16px);
+  background: var(--success);
+  color: #fff;
+  padding: 13px 22px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 10px 28px rgba(61, 43, 31, 0.22);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 100;
+  max-width: calc(100vw - 40px);
+  text-align: center;
+}
+
+.toast.toast-error { background: #a03d2b; }
+
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
